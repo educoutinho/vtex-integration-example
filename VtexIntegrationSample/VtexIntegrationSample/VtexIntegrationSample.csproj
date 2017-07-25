@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6C18D590-2AD7-4D27-8DD9-3FC161C266F6}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Enginesoft.VtexIntegrationSample</RootNamespace>
+    <AssemblyName>VtexIntegrationSample</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net45\RestSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Models\Address.cs" />
+    <Compile Include="Models\ClientIntegration.cs" />
+    <Compile Include="Models\CompleteOrderRequest.cs" />
+    <Compile Include="Models\CompleteOrderResponse.cs" />
+    <Compile Include="Models\CompleteOrderStatusEnum.cs" />
+    <Compile Include="Models\GetItemRequest.cs" />
+    <Compile Include="Models\GetItemResponse.cs" />
+    <Compile Include="Models\GetItemsPriceRequest.cs" />
+    <Compile Include="Models\GetItemsPriceResponse.cs" />
+    <Compile Include="Models\GetItemsPriceStatusEnum.cs" />
+    <Compile Include="Models\GetOrderRequestStatusEnum.cs" />
+    <Compile Include="Models\GetOrderStatusRequest.cs" />
+    <Compile Include="Models\GetOrderStatusResponse.cs" />
+    <Compile Include="Models\GetPaymentStatusEnum.cs" />
+    <Compile Include="Models\GetPaymentStatusRequest.cs" />
+    <Compile Include="Models\GetPaymentStatusResponse.cs" />
+    <Compile Include="Models\IntegrationConfiguration.cs" />
+    <Compile Include="Models\IntegrationConfigurationSeller.cs" />
+    <Compile Include="Models\Item.cs" />
+    <Compile Include="Models\ItemGetItemsPriceRequest.cs" />
+    <Compile Include="Models\ItemPrice.cs" />
+    <Compile Include="Models\ListItemResponse.cs" />
+    <Compile Include="Models\ListItemsRequest.cs" />
+    <Compile Include="Models\ListPaymentConditionsResponse.cs" />
+    <Compile Include="Models\OperationEmailConfig.cs" />
+    <Compile Include="Models\OrderStatusEnum.cs" />
+    <Compile Include="Models\PaymentCondition.cs" />
+    <Compile Include="Models\PaymentConditionInformation.cs" />
+    <Compile Include="Models\PaymentInstallment.cs" />
+    <Compile Include="Models\PaymentStatusEnum.cs" />
+    <Compile Include="Models\PaymentTypesEnum.cs" />
+    <Compile Include="Models\SendOrderRequest.cs" />
+    <Compile Include="Models\SendOrderRequestItem.cs" />
+    <Compile Include="Models\SendOrderResponse.cs" />
+    <Compile Include="Models\SendOrderStatusEnum.cs" />
+    <Compile Include="Models\SendPaymentRequest.cs" />
+    <Compile Include="Models\SendPaymentResponse.cs" />
+    <Compile Include="Models\SendPaymentStatusEnum.cs" />
+    <Compile Include="Models\ShippingInformation.cs" />
+    <Compile Include="Models\ShippingTime.cs" />
+    <Compile Include="StringExtensions.cs" />
+    <Compile Include="Utils.cs" />
+    <Compile Include="VtexIntegration.cs" />
+    <Compile Include="ModelsVtex\GetOrderStatusResponse.cs" />
+    <Compile Include="ModelsVtex\GetPaymentStatusResponse.cs" />
+    <Compile Include="ModelsVtex\PaymentConditionResponse.cs" />
+    <Compile Include="ModelsVtex\ProductAndSkuIdsResponse.cs" />
+    <Compile Include="ModelsVtex\SendOrderRequest.cs" />
+    <Compile Include="ModelsVtex\SendOrderResponse.cs" />
+    <Compile Include="ModelsVtex\SendPaymentArrayItemRequest.cs" />
+    <Compile Include="ModelsVtex\SendPaymentRequest.cs" />
+    <Compile Include="ModelsVtex\SendPaymentResponse.cs" />
+    <Compile Include="ModelsVtex\SkuInformationResponse.cs" />
+    <Compile Include="ModelsVtex\SkuPriceRequest.cs" />
+    <Compile Include="ModelsVtex\SkuPriceResponse.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="config.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
