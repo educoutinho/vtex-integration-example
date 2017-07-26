@@ -34,14 +34,12 @@ namespace Enginesoft.VtexIntegrationSample
             var clientIntegration = GetClientIntegration();
             var deliveryAddressIntegration = GetClientDeliveryAddress();
             
-            Dictionary<string, string> cookies = new Dictionary<string, string>();
 
             //---- simulation
 
             var responseGetItemsPrice = CheckCart(integration, clientIntegration, deliveryAddressIntegration, listItems);
             var jsonGetItemsPrice = Utils.JsonSerialize(responseGetItemsPrice);
-            Utils.MergeDictionaries(cookies, responseGetItemsPrice.Cookies);
-            
+                        
             //---- payment information
 
             //TODO: Você precisa consultar esses códigos na instalação da VTEX
@@ -107,14 +105,13 @@ namespace Enginesoft.VtexIntegrationSample
             var consolidateShippingInformationIntegration = listConsolidateShippingInformations.Where(a => a.ShippingTypeID == shippingTypeID).FirstOrDefault();
             var consolidateShippingInformation = new Models.ShippingInformation(consolidateShippingInformationIntegration.ShippingTypeID, consolidateShippingInformationIntegration.Name, consolidateShippingInformationIntegration.Price, new Models.ShippingTime(consolidateShippingInformationIntegration.ShippingTime.Days, consolidateShippingInformationIntegration.ShippingTime.IsBusinessDays));
 
-            var requestCloserOrder = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderListItems, deliveryAddressIntegration, paymentConditionInformation, cookies);
-            var requestCloseOrderIntegration = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderIntegrationListItems, deliveryAddressIntegration, paymentConditionInformationIntegration, cookies);
+            var requestCloserOrder = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderListItems, deliveryAddressIntegration, paymentConditionInformation);
+            var requestCloseOrderIntegration = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderIntegrationListItems, deliveryAddressIntegration, paymentConditionInformationIntegration);
             
             //----- send order
             System.Diagnostics.Debugger.Break();
             var responseCloseOrder = SendOrder(integration, requestCloseOrderIntegration);
-            Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
-
+            
             //----- save order
             //TODO: Salvar pedido no bd
             Log(string.Format("OrderID=0, SupplierOrderNumber={0}", responseCloseOrder.OrderNumber));
@@ -125,9 +122,8 @@ namespace Enginesoft.VtexIntegrationSample
 
             //------ complete order
             System.Diagnostics.Debugger.Break();
-            var responseCompleteOrder = integration.CompleteOrder(new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber, cookies));
-            Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
-            
+            var responseCompleteOrder = integration.CompleteOrder(new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber));
+                        
             //------ get payment information
             System.Diagnostics.Debugger.Break();
             var paymentStatus = GetPaymentStatus(integration, clientIntegration, responseCloseOrder.PaymentTransactionCode);

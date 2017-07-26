@@ -19,12 +19,9 @@ namespace Enginesoft.VtexIntegrationSample.Models
         public List<ShippingInformation> ConsolidatedShippingInformations { get; private set; }
 
         public List<PaymentCondition> PaymentConditionsList { get; private set; }
-
-        public Dictionary<string, string> Cookies { get; private set; }
-
+        
         public GetItemsPriceResponse(GetItemsPriceStatusEnum status, string message, string serviceCode,
-            List<ItemPrice> itemsList, List<ShippingInformation> consolidatedShippingInformationsList, List<PaymentCondition> paymentConditionsList,
-            Dictionary<string, string> cookies)
+            List<ItemPrice> itemsList, List<ShippingInformation> consolidatedShippingInformationsList, List<PaymentCondition> paymentConditionsList)
         {
             this.Status = status;
             this.Message = message;
@@ -32,7 +29,6 @@ namespace Enginesoft.VtexIntegrationSample.Models
             this.ItemsList = itemsList;
             this.ConsolidatedShippingInformations = consolidatedShippingInformationsList;
             this.PaymentConditionsList = paymentConditionsList;
-            this.Cookies = cookies;
         }
     }
 }

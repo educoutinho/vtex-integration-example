@@ -362,8 +362,7 @@ namespace Enginesoft.VtexIntegrationSample
             restSharpRequest.AddJsonBody(requestObj);
 
             string json = null;
-            var cookies = new Dictionary<string, string>();
-
+            
             var listItems = new List<Models.ItemPrice>();
             var listPaymentConditions = new List<Models.PaymentCondition>();
 
@@ -379,20 +378,16 @@ namespace Enginesoft.VtexIntegrationSample
                         json = Utils.JsonSerialize(requestObj);
 
                         this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nCookies: {3}\r\nRequest: {4}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), GetRequestCookies(restSharpRequest), json));
+                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
-
-                        cookies = new Dictionary<string, string>();
-                        foreach (var cookie in restSharpResponse.Cookies)
-                            cookies.Add(cookie.Name, cookie.Value);
-
+                        
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
                         this.LogServiceCall(
-                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -488,7 +483,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
 
             var listConsolidateShippingInformations = Utils.ConsolidateShippingInformation(listItems);
-            var response = new Models.GetItemsPriceResponse(Models.GetItemsPriceStatusEnum.Success, "OK", "200", listItems, listConsolidateShippingInformations, listPaymentConditions, cookies);
+            var response = new Models.GetItemsPriceResponse(Models.GetItemsPriceStatusEnum.Success, "OK", "200", listItems, listConsolidateShippingInformations, listPaymentConditions);
             return response;
         }
 
@@ -506,6 +501,9 @@ namespace Enginesoft.VtexIntegrationSample
             Models.SendOrderRequestItem item;
 
             var requestObj = new ModelsVtex.SendOrderRequest();
+
+            if (!string.IsNullOrEmpty(this.Config.UtmSource))
+                requestObj.marketingData = new ModelsVtex.SendOrderRequest.MarketingData() { utmSource = this.Config.UtmSource };
 
             requestObj.items = new List<ModelsVtex.SendOrderRequest.Item>();
 
@@ -618,10 +616,7 @@ namespace Enginesoft.VtexIntegrationSample
             restSharpRequest.AddHeader("Accept", "application/json");
             restSharpRequest.AddHeader("X-VTEX-API-AppKey", this.Config.OrderServiceKey);
             restSharpRequest.AddHeader("X-VTEX-API-AppToken", this.Config.OrderServiceToken);
-
-            foreach (var cookie in request.Coookies)
-                restSharpRequest.AddCookie(cookie.Key, cookie.Value);
-
+            
             //monta o request
             var requestObj = CreateSendOrderRequest(request);
 
@@ -629,8 +624,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             string serviceCode = null;
             string json = null;
-            var cookies = new Dictionary<string, string>();
-
+            
             ModelsVtex.SendOrderResponse responseObj = null;
             RestSharp.IRestResponse restSharpResponse = null;
 
@@ -643,20 +637,16 @@ namespace Enginesoft.VtexIntegrationSample
                         json = Utils.JsonSerialize(requestObj);
 
                         this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nCookies: {3}\r\nRequest: {4}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), GetRequestCookies(restSharpRequest), json));
+                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
-
-                        cookies = new Dictionary<string, string>();
-                        foreach (var cookie in restSharpResponse.Cookies)
-                            cookies.Add(cookie.Name, cookie.Value);
-
+                                                
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
                         this.LogServiceCall(
-                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         serviceCode = ((int)restSharpResponse.StatusCode).ToString();
 
@@ -708,7 +698,7 @@ namespace Enginesoft.VtexIntegrationSample
 
                 List<string> childOrders = responseObj.orders.Select(a => a.orderId).ToList();
 
-                var response = Models.SendOrderResponse.CreateSuccessResponse(serviceCode, orderGroup, merchantTransaction.transactionId, null, childOrders, cookies);
+                var response = Models.SendOrderResponse.CreateSuccessResponse(serviceCode, orderGroup, merchantTransaction.transactionId, null, childOrders);
                 return response;
             }
             catch (System.Exception ex)
@@ -786,8 +776,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             string serviceCode = null;
             string json = null;
-            var cookies = new Dictionary<string, string>();
-
+            
             ModelsVtex.SendPaymentResponse responseObj = null;
             RestSharp.IRestResponse restSharpResponse = null;
 
@@ -808,20 +797,16 @@ namespace Enginesoft.VtexIntegrationSample
                             json = json.Replace(objPayment.fields.validationCode, Utils.HideCreditCardValidationCode(objPayment.fields.validationCode));
 
                         this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nCookies: {3}\r\nRequest: {4}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), GetRequestCookies(restSharpRequest), json));
+                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
-
-                        cookies = new Dictionary<string, string>();
-                        foreach (var cookie in restSharpResponse.Cookies)
-                            cookies.Add(cookie.Name, cookie.Value);
-
+                        
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
                         this.LogServiceCall(
-                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         serviceCode = ((int)restSharpResponse.StatusCode).ToString();
 
@@ -890,16 +875,12 @@ namespace Enginesoft.VtexIntegrationSample
             restSharpRequest.AddHeader("Content-Type", "application/json");
             restSharpRequest.AddHeader("X-VTEX-API-AppKey", this.Config.OrderServiceKey);
             restSharpRequest.AddHeader("X-VTEX-API-AppToken", this.Config.OrderServiceToken);
-
-            foreach (var cookie in request.Cookies)
-                restSharpRequest.AddCookie(cookie.Key, cookie.Value);
-
+            
             object requestObj = null;
 
             string serviceCode = null;
             string json = null;
-            var cookies = new Dictionary<string, string>();
-
+            
             var listItems = new List<Models.ItemPrice>();
             var listPaymentConditions = new List<Models.PaymentCondition>();
 
@@ -914,22 +895,18 @@ namespace Enginesoft.VtexIntegrationSample
                         json = Utils.JsonSerialize(requestObj);
 
                         this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nCookies: {3}\r\nRequest: {4}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), GetRequestCookies(restSharpRequest), json));
+                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
-
-                        cookies = new Dictionary<string, string>();
-                        foreach (var cookie in restSharpResponse.Cookies)
-                            cookies.Add(cookie.Name, cookie.Value);
-
+                        
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
                         if (!string.IsNullOrEmpty(json) && json.IndexOf("<html", StringComparison.CurrentCultureIgnoreCase) != -1)
                             json = Utils.MaxLength(json, 1000, "...");
 
                         this.LogServiceCall(
-                            string.Format("[{0}] ret {1}\r\nHttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                            string.Format("[{0}] ret {1}\r\nHttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -990,7 +967,7 @@ namespace Enginesoft.VtexIntegrationSample
                         stopwatch.Stop();
 
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
-                        this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {4} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -1090,15 +1067,13 @@ namespace Enginesoft.VtexIntegrationSample
                 ret.Message = "OK";
                 ret.ServiceCode = serviceCode;
 
-                if (string.Equals(obj.status, "Started", StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(obj.status, "Started", StringComparison.CurrentCultureIgnoreCase)
+                    || string.Equals(obj.status, "AnalyzingRisk", StringComparison.CurrentCultureIgnoreCase))
                 {
                     ret.PaymentStatus = Models.PaymentStatusEnum.Pendent;
                 }
-                else if (string.Equals(obj.status, "AnalyzingRisk", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    ret.PaymentStatus = Models.PaymentStatusEnum.Pendent;
-                }
-                else if (string.Equals(obj.status, "Finished", StringComparison.CurrentCultureIgnoreCase))
+                else if (string.Equals(obj.status, "Authorized", StringComparison.CurrentCultureIgnoreCase)
+                    || string.Equals(obj.status, "Finished", StringComparison.CurrentCultureIgnoreCase))
                 {
                     ret.PaymentStatus = Models.PaymentStatusEnum.Approved;
                 }
@@ -1120,16 +1095,7 @@ namespace Enginesoft.VtexIntegrationSample
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
-
-        private string GetCookiesText(Dictionary<string, string> cookies)
-        {
-            if (cookies == null)
-                return null;
-
-            string text = string.Join(",", cookies.Select(a => string.Format("{0}={1}", a.Key, a.Value)));
-            return text;
-        }
-
+        
         private static string GetRequestHeaders(RestSharp.IRestRequest request)
         {
             if (request == null)
@@ -1138,16 +1104,7 @@ namespace Enginesoft.VtexIntegrationSample
             string text = string.Join(", ", request.Parameters.Where(a => a.Type == RestSharp.ParameterType.HttpHeader).Select(a => string.Format("{0}={1}", a.Name, a.Value)));
             return text;
         }
-
-        private static string GetRequestCookies(RestSharp.IRestRequest request)
-        {
-            if (request == null)
-                return null;
-
-            string text = string.Join(", ", request.Parameters.Where(a => a.Type == RestSharp.ParameterType.Cookie).Select(a => string.Format("{0}={1}", a.Name, a.Value)));
-            return text;
-        }
-
+        
         private static string GetResponseHeaders(RestSharp.IRestResponse response)
         {
             if (response == null)
@@ -1156,16 +1113,7 @@ namespace Enginesoft.VtexIntegrationSample
             string text = string.Join(", ", response.Headers.Select(a => string.Format("{0}={1}", a.Name, a.Value)));
             return text;
         }
-
-        private static string GetResponseCookies(RestSharp.IRestResponse response)
-        {
-            if (response == null)
-                return null;
-
-            string text = string.Join(", ", response.Cookies.Select(a => string.Format("{0}={1}", a.Name, a.Value)));
-            return text;
-        }
-
+        
         #region LogEvent
 
         public delegate void LogEventHandler(string message);

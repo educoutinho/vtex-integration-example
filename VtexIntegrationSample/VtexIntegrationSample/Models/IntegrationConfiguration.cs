@@ -34,5 +34,7 @@ namespace Enginesoft.VtexIntegrationSample.Models
         public string TradePolicyCode { get; set; }
 
         public string MerchantName { get; set; }
+
+        public string UtmSource { get; set; }
     }
 }

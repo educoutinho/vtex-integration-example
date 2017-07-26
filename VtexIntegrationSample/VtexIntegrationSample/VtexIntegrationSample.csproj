@@ -72,7 +72,6 @@
     <Compile Include="Models\ListItemResponse.cs" />
     <Compile Include="Models\ListItemsRequest.cs" />
     <Compile Include="Models\ListPaymentConditionsResponse.cs" />
-    <Compile Include="Models\OperationEmailConfig.cs" />
     <Compile Include="Models\OrderStatusEnum.cs" />
     <Compile Include="Models\PaymentCondition.cs" />
     <Compile Include="Models\PaymentConditionInformation.cs" />

@@ -21,15 +21,13 @@ namespace Enginesoft.VtexIntegrationSample.Models
         public Dictionary<string, string> Coookies { get; private set; }
 
         public SendOrderRequest(Models.ClientIntegration clientIntegration, decimal total,
-            List<SendOrderRequestItem> itemsList, Address deliveryAddress, PaymentConditionInformation paymentConditionInformation,
-            Dictionary<string, string> coookies)
+            List<SendOrderRequestItem> itemsList, Address deliveryAddress, PaymentConditionInformation paymentConditionInformation)
         {
             this.ClientIntegration = clientIntegration;
             this.Total = total;
             this.ItemsList = itemsList;
             this.DeliveryAddress = deliveryAddress;
             this.PaymentConditionInformation = paymentConditionInformation;
-            this.Coookies = coookies;
         }
     }
 }

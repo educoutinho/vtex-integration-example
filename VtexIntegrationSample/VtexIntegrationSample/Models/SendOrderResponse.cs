@@ -24,16 +24,13 @@ namespace Enginesoft.VtexIntegrationSample.Models
         public string BankSlipUrl { get; private set; }
         
 
-        public Dictionary<string, string> Cookies { get; private set; }
-
-
         //Construtor privado, utilize os métodos estáticos
         private SendOrderResponse()
         {
             this.ChildOrders = new List<string>();
         }
 
-        public static SendOrderResponse CreateSuccessResponse(string serviceCode, string orderNumber, string paymentTransactionCode, string bankSlipUrl, List<string> childOrders, Dictionary<string, string> cookies)
+        public static SendOrderResponse CreateSuccessResponse(string serviceCode, string orderNumber, string paymentTransactionCode, string bankSlipUrl, List<string> childOrders)
         {
             var response = new SendOrderResponse();
             response.Status = SendOrderStatusEnum.Success;
@@ -42,7 +39,6 @@ namespace Enginesoft.VtexIntegrationSample.Models
             response.PaymentTransactionCode = paymentTransactionCode;
             response.BankSlipUrl = bankSlipUrl;
             response.ChildOrders = childOrders;
-            response.Cookies = cookies;
             return response;
         }
 

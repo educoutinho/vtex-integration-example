@@ -305,28 +305,7 @@ namespace Enginesoft.VtexIntegrationSample
             string ret = new string('*', text.Length);
             return ret;
         }
-
-        public static void MergeDictionaries(Dictionary<string, string> cookies, Dictionary<string, string> cookiesToAdd)
-        {
-            try
-            {
-                if (cookiesToAdd == null)
-                    return;
-
-                foreach (var item in cookiesToAdd)
-                {
-                    if (!cookies.ContainsKey(item.Key))
-                        cookies.Add(item.Key, item.Value);
-                    else
-                        cookies[item.Key] = item.Value;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
+        
         public static string GetConfigDirectory()
         {
             string path = Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly());

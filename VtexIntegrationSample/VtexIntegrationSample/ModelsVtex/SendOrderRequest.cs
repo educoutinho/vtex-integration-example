@@ -13,6 +13,7 @@ namespace Enginesoft.VtexIntegrationSample.ModelsVtex
         public ShippingData shippingData { get; set; }
         public PaymentData paymentData { get; set; }
         public List<object> giftcards { get; set; }
+        public MarketingData marketingData { get; set; }
 
         internal class Item
         {
@@ -86,6 +87,11 @@ namespace Enginesoft.VtexIntegrationSample.ModelsVtex
         internal class PaymentData
         {
             public List<Payment> payments { get; set; }
+        }
+
+        internal class MarketingData
+        {
+            public string utmSource { get; set; }
         }
     }
 }
