@@ -25,12 +25,11 @@ namespace Enginesoft.VtexIntegrationSample
             
             //Dados para teste
             string shippingTypeID = "SEDEX";
-            int[] listItemIds = new int[] { 342911 };
             var paymentTypeID = Models.PaymentTypesEnum.Amex;
             
             //Itens para enviar no pedido
             var listItems = new List<Models.Item>();
-            listItems.Add(new Models.Item("988", "7894854031548", "Máscara TNT Tipo Calcinha Branca SKY", "SKY DESCARTÁVEIS", "", "CASA E CONSTRUÇÃO", "Limpeza", "Sabão / Detergente para Roupa", "", "protcap"));
+            listItems.Add(new Models.Item("988", "7894854031548", "Máscara TNT Tipo Calcinha Branca SKY", null, null, null, null, null, null, "protcap"));
             
             //Dados do cliente
             var clientIntegration = GetClientIntegration();
@@ -45,14 +44,23 @@ namespace Enginesoft.VtexIntegrationSample
             Utils.MergeDictionaries(cookies, responseGetItemsPrice.Cookies);
             System.Diagnostics.Debugger.Break();
 
-            /*
             //---- payment information
 
-            var clientSupplierPaymentCondition = clientSupplier.ClientSupplierPaymentConditions.Where(a => a.SupplierPaymentCondition.PaymentConditionTypeID == (int)paymentTypeID).First();
-            var supplierPaymentCondition = clientSupplierPaymentCondition.SupplierPaymentCondition;
+            //1   American Express
+            //2   Visa
+            //3   Diners
+            //4   Mastercard
+            //8   Hipercard
+            //9   Elo
+            //1   American Express
+            //2   Visa
+            //3   Diners
+            //4   Mastercard
+            //8   Hipercard
+            //9   Elo
 
-            var paymentCondition = new Domain.Purchase.PaymentCondition(supplierPaymentCondition.SupplierPaymentConditionID, supplierPaymentCondition.SupplierPaymentConditionCode, supplierPaymentCondition.Name, supplierPaymentCondition.GroupName, paymentTypeID, 0, new List<Domain.Purchase.PaymentInstallment>());
-            var paymentConditionInformation = new Domain.Purchase.PaymentConditionInformation(paymentCondition, 0, 1, 0);
+            var paymentCondition = new Models.PaymentCondition("1", "American Express", "creditCardPaymentGroup", Models.PaymentTypesEnum.Amex, 0, new List<Models.PaymentInstallment>());
+            var paymentConditionInformation = new Models.PaymentConditionInformation(paymentCondition, 0, 1, 0);
 
             paymentConditionInformation.SetCreditCardInformation("376600000000000", "Jose da Silva", 2022, 12, "0000", "66186378489");
             //Ei você debugando, rode esse comando novamente no Immediate Window enviando dados válidos de cartão
@@ -73,13 +81,13 @@ namespace Enginesoft.VtexIntegrationSample
                 if (shippingInformationIntegration == null)
                     throw new System.InvalidOperationException("Condição de entrega não encontrada para o item");
 
-                var shippingInformation = new Domain.Item.ShippingInformation(shippingTypeID, shippingTypeID, itemPriceIntegration.Value, new Domain.Item.ShippingTime(shippingInformationIntegration.ShippingTime.Days, shippingInformationIntegration.ShippingTime.IsBusinessDays));
+                var shippingInformation = new Models.ShippingInformation(shippingTypeID, shippingTypeID, itemPriceIntegration.Value, new Models.ShippingTime(shippingInformationIntegration.ShippingTime.Days, shippingInformationIntegration.ShippingTime.IsBusinessDays));
 
                 var item = listItems.Where(a => a.Barcode == itemPriceIntegration.Barcode).FirstOrDefault();
 
                 listShippingInformations.Add(shippingInformationIntegration);
 
-                requestCloseOrderListItems.Add(new Domain.Order.SendOrderRequestItem(item.ItemID, item.Name, item.Barcode, item.PackagesInBox, itemPriceIntegration.SupplierItemCode, 0, 0, itemQuantity, itemPriceIntegration.Value, itemQuantity * itemPriceIntegration.Value, itemPriceIntegration.SellerCode, shippingInformation));
+                requestCloseOrderListItems.Add(new Models.SendOrderRequestItem(item.Barcode, itemPriceIntegration.SupplierItemCode, itemPriceIntegration.SellerCode, itemQuantity, itemPriceIntegration.Value, itemQuantity * itemPriceIntegration.Value, shippingInformation));
                 requestCloseOrderIntegrationListItems.Add(new Models.SendOrderRequestItem(itemPriceIntegration.Barcode, itemPriceIntegration.SupplierItemCode, itemPriceIntegration.SellerCode, itemQuantity, itemPriceIntegration.Value, itemQuantity * itemPriceIntegration.Value, shippingInformationIntegration));
             }
 
@@ -93,14 +101,14 @@ namespace Enginesoft.VtexIntegrationSample
             paymentConditionInformation.SetInstallmentValue(installmentQuantity, installmentsValue);
 
             var paymentConditionIntegration = new Models.PaymentCondition(paymentCondition.PaymentConditionCode, paymentCondition.Name, paymentCondition.GroupName, paymentTypeID, orderTotalValue, new List<Models.PaymentInstallment>());
-            var paymentConditionInformationIntegration = new Models.PaymentConditionInformation(paymentConditionIntegration, paymentConditionInformation.Value, paymentConditionInformation.InstallmentsQuantity, paymentConditionInformation.InstallmentsValue);
+            var paymentConditionInformationIntegration = new Models.PaymentConditionInformation(paymentConditionIntegration, paymentConditionInformation.Value, paymentConditionInformation.InstallmentQuantity, paymentConditionInformation.InstallmentValue);
             paymentConditionInformationIntegration.SetCreditCardInformation(paymentConditionInformation.CardNumber, paymentConditionInformation.HolderName, paymentConditionInformation.DueYear, paymentConditionInformation.DueMonth, paymentConditionInformation.ValidationCode, paymentConditionInformation.DocumentNumber);
 
-            var listConsolidateShippingInformations = UtilsIntegration.ConsolidateShippingInformation(responseGetItemsPrice.ItemsList);
+            var listConsolidateShippingInformations = Utils.ConsolidateShippingInformation(responseGetItemsPrice.ItemsList);
             var consolidateShippingInformationIntegration = listConsolidateShippingInformations.Where(a => a.ShippingTypeID == shippingTypeID).FirstOrDefault();
-            var consolidateShippingInformation = new Domain.Item.ShippingInformation(consolidateShippingInformationIntegration.ShippingTypeID, consolidateShippingInformationIntegration.Name, consolidateShippingInformationIntegration.Price, new Domain.Item.ShippingTime(consolidateShippingInformationIntegration.ShippingTime.Days, consolidateShippingInformationIntegration.ShippingTime.IsBusinessDays));
+            var consolidateShippingInformation = new Models.ShippingInformation(consolidateShippingInformationIntegration.ShippingTypeID, consolidateShippingInformationIntegration.Name, consolidateShippingInformationIntegration.Price, new Models.ShippingTime(consolidateShippingInformationIntegration.ShippingTime.Days, consolidateShippingInformationIntegration.ShippingTime.IsBusinessDays));
 
-            var requestCloserOrder = new Domain.Order.SendOrderRequest(client.ClientID, 1, (int)supplierEnum, 1, requestCloseOrderListItems, subTotalValue, orderTotalValue, totalQuantity, consolidateShippingInformation, deliveryAddress.ClientAddressID, paymentConditionInformation, cookies);
+            var requestCloserOrder = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderListItems, deliveryAddressIntegration, paymentConditionInformation, cookies);
             var requestCloseOrderIntegration = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderIntegrationListItems, deliveryAddressIntegration, paymentConditionInformationIntegration, cookies);
 
             //----- send order
@@ -109,7 +117,7 @@ namespace Enginesoft.VtexIntegrationSample
             Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
 
             //----- save order
-            //TODO: Salvar
+            //TODO: Salvar pedido no bd
 
             //---- send payment
             System.Diagnostics.Debugger.Break();
@@ -117,14 +125,13 @@ namespace Enginesoft.VtexIntegrationSample
 
             //------ complete order
             System.Diagnostics.Debugger.Break();
-            var responseCompleteOrder = integrationBusiness.CompleteOrder(integration, new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber, cookies));
+            var responseCompleteOrder = integration.CompleteOrder(new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber, cookies));
             Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
 
             //------ get payment information
             System.Diagnostics.Debugger.Break();
             var paymentStatus = GetPaymentStatus(integration, clientIntegration, responseCloseOrder.PaymentTransactionCode);
-            */
-
+            
             System.Diagnostics.Debugger.Break();
         }
         
@@ -137,7 +144,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             if (!System.IO.File.Exists(path))
             {
-                var billingAddress = GetClientBillingAddress();
+                var billingAddress = new Models.Address("principal", "Jose Teste", "Av Paulista", "1000", "cj 77", "Cerqueira César", "01311200", "São Paulo", "SP", "BRA");
                 client = new Models.ClientIntegration(0, "Empresa Teste", "Jose", "Teste", "14452872182", "96379179000109", "Isento", "teste@teste.com.br", "11 6666-6666", billingAddress);
 
                 using (var streamWriter = new System.IO.StreamWriter(path))
@@ -161,39 +168,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             return client;
         }
-
-        private static Models.Address GetClientBillingAddress()
-        {
-            string directoryPath = Utils.GetConfigDirectory();
-            string path = System.IO.Path.Combine(directoryPath, "clientBillingAddress.xml");
-
-            Models.Address address;
-            if (!System.IO.File.Exists(path))
-            {
-                address = new Models.Address("principal", "Jose Teste", "Av Paulista", "1000", "cj 77", "Cerqueira César", "01311200", "São Paulo", "SP", "BRA");
-
-                using (var streamWriter = new System.IO.StreamWriter(path))
-                {
-                    new System.Xml.Serialization.XmlSerializer(typeof(Models.Address)).Serialize(streamWriter, address);
-                }
-            }
-
-            try
-            {
-                using (var streamReader = new System.IO.StreamReader(path))
-                {
-                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(Models.Address));
-                    address = (Models.Address)xmlSerializer.Deserialize(streamReader);
-                }
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.InvalidOperationException(string.Format("Erro na leitura do arquivo com o endereço de faturamento -- path: {0} -- {1}", path, ex.Message), ex);
-            }
-
-            return address;
-        }
-
+        
         private static Models.Address GetClientDeliveryAddress()
         {
             string directoryPath = Utils.GetConfigDirectory();
@@ -276,7 +251,7 @@ namespace Enginesoft.VtexIntegrationSample
             Console.WriteLine(Utils.MaxLength(message, 600, "..."));
             System.Diagnostics.Debug.WriteLine(message);
 
-            string path = System.IO.Path.Combine(Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly()), @"_log.txt");
+            string path = System.IO.Path.Combine(Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly()), @"_logSample.txt");
             using (var streamWriter = new System.IO.StreamWriter(path, true))
             {
                 streamWriter.WriteLine(string.Format("{0}\t{1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));
@@ -287,7 +262,7 @@ namespace Enginesoft.VtexIntegrationSample
         {
             Console.WriteLine(Utils.MaxLength(message, 600, "..."));
 
-            string path = System.IO.Path.Combine(Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly()), @"_log.txt");
+            string path = System.IO.Path.Combine(Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly()), @"_logSample.txt");
             using (var streamWriter = new System.IO.StreamWriter(path, true))
             {
                 streamWriter.WriteLine(string.Format("{0}\t{1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));

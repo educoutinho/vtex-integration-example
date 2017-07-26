@@ -113,7 +113,6 @@
   <ItemGroup />
   <ItemGroup>
     <Content Include="config\client.xml" />
-    <Content Include="config\clientBillingAddress.xml" />
     <Content Include="config\vtex.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
