@@ -11,6 +11,10 @@ namespace Enginesoft.VtexIntegrationSample
         public static void Main(string[] args)
         {
             TestSendOrder();
+
+            Console.WriteLine();
+            Console.WriteLine("Bye!");
+            Console.ReadKey();
         }
 
         private static void TestSendOrder()
@@ -18,54 +22,30 @@ namespace Enginesoft.VtexIntegrationSample
             var integration = VtexIntegration.Create();
             integration.LogEvent += Log;
             integration.LogServiceCallEvent += LogServiceCall;
-
-            var integrationBusiness = new Business.IntegrationBusiness((int)supplierEnum);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
-            int clientID = 1253;
-            int profileID = 0;
+            
+            //Dados para teste
             string shippingTypeID = "SEDEX";
             int[] listItemIds = new int[] { 342911 };
             var paymentTypeID = Models.PaymentTypesEnum.Amex;
             
-            var client = new Business.ClientBusiness().Get(clientID, true);
-            var supplier = new Business.SupplierBusiness().Get((int)supplierEnum, true);
-            var clientSupplier = client.ClientSuppliers.Where(a => a.SupplierID == (int)supplierEnum).First();
-
-            client.Email = "sample@teste.com";
-
-            var itemBusiness = new Business.ItemBusiness();
-            var listItems = new List<Domain.Item.Item>();
-            foreach (var id in listItemIds)
-            {
-                var item = itemBusiness.Get(id, profileID);
-                if (item == null)
-                    throw new System.InvalidOperationException("Invalid ItemID");
-
-                listItems.Add(item);
-            }
-
-            var billingAddress = client.ClientAddresses.Where(a => a.ClientID == clientID && a.AddressTypeID == (int)Domain.Client.AddressTypeEnum.Billing).FirstOrDefault();
-            if (billingAddress == null)
-                throw new System.InvalidOperationException(string.Format("Client ID={0} não possui endereço de faturamento", clientID));
-
-            var deliveryAddress = client.ClientAddresses.Where(a => a.ClientID == clientID && a.AddressTypeID == (int)Domain.Client.AddressTypeEnum.Delivery).FirstOrDefault();
-            if (deliveryAddress == null)
-                throw new System.InvalidOperationException(string.Format("Client ID={0} não possui endereço de entrega", clientID));
-
-            var deliveryAddressIntegration = new Models.Address("Entrega", string.Format("{0} {1}", client.ContactFirstName, client.ContactLastName), deliveryAddress.Street, deliveryAddress.Number, deliveryAddress.Complement, deliveryAddress.Quarter, deliveryAddress.Zipcode, deliveryAddress.City, deliveryAddress.State, deliveryAddress.Country);
-
-            var clientIntegration = GetClientIntegration(client, billingAddress);
-
+            //Itens para enviar no pedido
+            var listItems = new List<Models.Item>();
+            listItems.Add(new Models.Item("988", "7894854031548", "Máscara TNT Tipo Calcinha Branca SKY", "SKY DESCARTÁVEIS", "", "CASA E CONSTRUÇÃO", "Limpeza", "Sabão / Detergente para Roupa", "", "protcap"));
+            
+            //Dados do cliente
+            var clientIntegration = GetClientIntegration();
+            var deliveryAddressIntegration = GetClientDeliveryAddress();
+            
             Dictionary<string, string> cookies = new Dictionary<string, string>();
 
             //---- simulation
 
-            var responseGetItemsPrice = CheckCart((int)supplierEnum, clientIntegration, deliveryAddressIntegration, listItems);
+            var responseGetItemsPrice = CheckCart(integration, clientIntegration, deliveryAddressIntegration, listItems);
             var jsonGetItemsPrice = Utils.JsonSerialize(responseGetItemsPrice);
-            MergeDictionaries(cookies, responseGetItemsPrice.Cookies);
+            Utils.MergeDictionaries(cookies, responseGetItemsPrice.Cookies);
+            System.Diagnostics.Debugger.Break();
 
+            /*
             //---- payment information
 
             var clientSupplierPaymentCondition = clientSupplier.ClientSupplierPaymentConditions.Where(a => a.SupplierPaymentCondition.PaymentConditionTypeID == (int)paymentTypeID).First();
@@ -83,7 +63,7 @@ namespace Enginesoft.VtexIntegrationSample
             int itemQuantity = 1;
             int installmentQuantity = 1;
 
-            var requestCloseOrderListItems = new List<Domain.Order.SendOrderRequestItem>();
+            var requestCloseOrderListItems = new List<Models.SendOrderRequestItem>();
             var requestCloseOrderIntegrationListItems = new List<Models.SendOrderRequestItem>();
 
             var listShippingInformations = new List<Models.ShippingInformation>();
@@ -125,160 +105,144 @@ namespace Enginesoft.VtexIntegrationSample
 
             //----- send order
             System.Diagnostics.Debugger.Break();
-            var responseCloseOrder = SendOrder((int)supplierEnum, requestCloseOrderIntegration);
-            MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
+            var responseCloseOrder = SendOrder(integration, requestCloseOrderIntegration);
+            Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
 
             //----- save order
-            System.Diagnostics.Debugger.Break();
-            var orderID = SaveOrder(client, billingAddress, deliveryAddress, requestCloserOrder, responseCloseOrder.OrderNumber, responseCloseOrder.BankSlipUrl, responseCloseOrder.PaymentTransactionCode, paymentConditionInformation);
+            //TODO: Salvar
 
             //---- send payment
             System.Diagnostics.Debugger.Break();
-            var responseSendPayment = SendPayment((int)supplierEnum, clientIntegration, responseCloseOrder.OrderNumber, responseCloseOrder.PaymentTransactionCode, paymentConditionInformationIntegration);
+            var responseSendPayment = SendPayment(integration, clientIntegration, responseCloseOrder.OrderNumber, responseCloseOrder.PaymentTransactionCode, paymentConditionInformationIntegration);
 
             //------ complete order
             System.Diagnostics.Debugger.Break();
-            var responseCompleteOrder = integrationBusiness.CompleteOrder(new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber, cookies));
-            MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
+            var responseCompleteOrder = integrationBusiness.CompleteOrder(integration, new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber, cookies));
+            Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
 
             //------ get payment information
             System.Diagnostics.Debugger.Break();
-            var paymentStatus = GetPaymentStatus((int)supplierEnum, clientIntegration, responseCloseOrder.PaymentTransactionCode);
+            var paymentStatus = GetPaymentStatus(integration, clientIntegration, responseCloseOrder.PaymentTransactionCode);
+            */
 
             System.Diagnostics.Debugger.Break();
         }
-
-        private static void VtexCheckStatus()
+        
+        private static Models.ClientIntegration GetClientIntegration()
         {
-            var integrationBusiness = new Business.IntegrationBusiness((int)Models.SuppliersEnum.None);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
+            string directoryPath = Utils.GetConfigDirectory();
+            string path = System.IO.Path.Combine(directoryPath, "client.xml");
+            
+            Models.ClientIntegration client;
 
-            var cancelationToken = new System.Threading.CancellationTokenSource();
-            integrationBusiness.VtexCheckStatus(cancelationToken);
-        }
-
-        private static Models.ClientIntegration GetClientIntegration(Domain.Client.Client client, Domain.Client.ClientAddress billingAddress)
-        {
-            var billingAddressIntegration = new Models.Address("Faturamento", string.Format("{0} {1}", client.ContactFirstName, client.ContactLastName), billingAddress.Street, billingAddress.Number, billingAddress.Complement, billingAddress.Quarter, billingAddress.Zipcode, billingAddress.City, billingAddress.State, billingAddress.Country);
-
-            var clientIntegration = new Models.ClientIntegration(
-                client.ClientID, client.CompanyName,
-                client.ContactFirstName, client.ContactLastName, client.ContactCpf,
-                client.Cnpj, client.Ie,
-                client.Email, client.Phone, billingAddressIntegration);
-
-            return clientIntegration;
-        }
-
-        private static Marketplace.Models.ServiceExecutionLog UpdateAllItems(int supplierID)
-        {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
-            var cancelationTokenSource = new System.Threading.CancellationTokenSource();
-            var log = integrationBusiness.VtexUpdateAllItems(cancelationTokenSource);
-            return log;
-        }
-
-        private static Marketplace.Models.ServiceExecutionLog ProcessItemNotificatinon(int supplierID)
-        {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
-            int successQuantity = 0;
-            int errorQuantity = 0;
-            Marketplace.Models.ServiceExecutionLog log = null;
-
-            var cancelationTokenSource = new System.Threading.CancellationTokenSource();
-
-            while (true)
+            if (!System.IO.File.Exists(path))
             {
-                log = integrationBusiness.ProcessVtexItemNotificationQueue(5, cancelationTokenSource);
+                var billingAddress = GetClientBillingAddress();
+                client = new Models.ClientIntegration(0, "Empresa Teste", "Jose", "Teste", "14452872182", "96379179000109", "Isento", "teste@teste.com.br", "11 6666-6666", billingAddress);
 
-                successQuantity += log.SuccessQuantity;
-                errorQuantity += log.ErrorQuantity;
-
-                if (log.SuccessQuantity == 0 && log.ErrorQuantity == 0)
-                    break;
+                using (var streamWriter = new System.IO.StreamWriter(path))
+                {
+                    new System.Xml.Serialization.XmlSerializer(typeof(Models.ClientIntegration)).Serialize(streamWriter, client);
+                }
             }
 
-            return log;
-        }
-
-        private static List<Domain.Purchase.PaymentConditionType> ListPaymentConditions(int supplierID)
-        {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
-            var responsePaymentConditions = integrationBusiness.ListPaymentConditions();
-            Console.WriteLine(string.Format("responsePaymentConditions -- response: {0}", Utils.JsonSerialize(responsePaymentConditions, true, true)));
-
-            var paymentConditionTypes = new Business.PurchaseBusiness().ListPaymentConditionTypes();
-            return paymentConditionTypes;
-        }
-
-        private static List<Models.GetItemResponse> ListItemsIntegration(int supplierID, List<Domain.Item.Item> listItems)
-        {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
-            var integration = Integration.VtexIntegration.Create();
-            integration.LogEvent += Log;
-            integration.LogServiceCallEvent += LogServiceCall;
-
-            var listResponse = new List<Models.GetItemResponse>();
-
-            foreach (var item in listItems)
+            try
             {
-                var supplierItem = item.SupplierItems.Where(a => a.SupplierID == supplierID).FirstOrDefault();
-
-                var requestGet = new Models.GetItemRequest(supplierItem.SupplierItemCode);
-                var responseGet = integration.GetItem(requestGet);
-                Console.WriteLine(string.Format("responseItemGet: {0}", Utils.JsonSerialize(responseGet, true, true)));
-
-                listResponse.Add(responseGet);
+                using (var streamReader = new System.IO.StreamReader(path))
+                {
+                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(Models.ClientIntegration));
+                    client = (Models.ClientIntegration)xmlSerializer.Deserialize(streamReader);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.InvalidOperationException(string.Format("Erro na leitura do arquivo com os dados do cliente -- path: {0} -- {1}", path, ex.Message), ex);
             }
 
-            return listResponse;
+            return client;
         }
 
-        private static Models.GetItemsPriceResponse CheckCart(int supplierID, Models.ClientIntegration clientIntegration, Models.Address deliveryAddressIntegration, List<Domain.Item.Item> listItem)
+        private static Models.Address GetClientBillingAddress()
         {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
+            string directoryPath = Utils.GetConfigDirectory();
+            string path = System.IO.Path.Combine(directoryPath, "clientBillingAddress.xml");
 
+            Models.Address address;
+            if (!System.IO.File.Exists(path))
+            {
+                address = new Models.Address("principal", "Jose Teste", "Av Paulista", "1000", "cj 77", "Cerqueira César", "01311200", "São Paulo", "SP", "BRA");
+
+                using (var streamWriter = new System.IO.StreamWriter(path))
+                {
+                    new System.Xml.Serialization.XmlSerializer(typeof(Models.Address)).Serialize(streamWriter, address);
+                }
+            }
+
+            try
+            {
+                using (var streamReader = new System.IO.StreamReader(path))
+                {
+                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(Models.Address));
+                    address = (Models.Address)xmlSerializer.Deserialize(streamReader);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.InvalidOperationException(string.Format("Erro na leitura do arquivo com o endereço de faturamento -- path: {0} -- {1}", path, ex.Message), ex);
+            }
+
+            return address;
+        }
+
+        private static Models.Address GetClientDeliveryAddress()
+        {
+            string directoryPath = Utils.GetConfigDirectory();
+            string path = System.IO.Path.Combine(directoryPath, "clientDeliveryAddress.xml");
+
+            Models.Address address;
+            if (!System.IO.File.Exists(path))
+            {
+                address = new Models.Address("entrega", "Jose Teste", "Av Paulista", "1000", "cj 77", "Cerqueira César", "01311200", "São Paulo", "SP", "BRA");
+
+                using (var streamWriter = new System.IO.StreamWriter(path))
+                {
+                    new System.Xml.Serialization.XmlSerializer(typeof(Models.Address)).Serialize(streamWriter, address);
+                }
+            }
+
+            try
+            {
+                using (var streamReader = new System.IO.StreamReader(path))
+                {
+                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(typeof(Models.Address));
+                    address = (Models.Address)xmlSerializer.Deserialize(streamReader);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.InvalidOperationException(string.Format("Erro na leitura do arquivo com o endereço de faturamento -- path: {0} -- {1}", path, ex.Message), ex);
+            }
+
+            return address;
+        }
+        
+        private static Models.GetItemsPriceResponse CheckCart(VtexIntegration integration, Models.ClientIntegration clientIntegration, Models.Address deliveryAddressIntegration, List<Models.Item> listItem)
+        {
             int itemQuantity = 1;
 
             var requestItemsPriceListItems = new List<Models.ItemGetItemsPriceRequest>();
             foreach (var item in listItem)
-            {
-                var supplierItem = item.SupplierItems.Where(a => a.SupplierID == supplierID).FirstOrDefault();
-                if (supplierItem == null)
-                    throw new System.InvalidOperationException("Invalid item");
-
-                requestItemsPriceListItems.Add(new Models.ItemGetItemsPriceRequest(supplierItem.SupplierItemCode, item.Barcode, itemQuantity, item.PackagesInBox, supplierItem.SellerCode));
-            }
+                requestItemsPriceListItems.Add(new Models.ItemGetItemsPriceRequest(item.SupplierItemCode, item.Barcode, itemQuantity, item.SellerCode));
 
             var requestItemsPrice = new Models.GetItemsPriceRequest(clientIntegration, deliveryAddressIntegration.Zipcode, requestItemsPriceListItems, null);
-            var responseItemsPrice = integrationBusiness.GetItemsPrice(requestItemsPrice);
+            var responseItemsPrice = integration.GetItemsPrice(requestItemsPrice);
 
             return responseItemsPrice;
         }
 
-        private static Models.SendOrderResponse SendOrder(int supplierID,
-            Models.SendOrderRequest requestCloseOrderIntegration)
+        private static Models.SendOrderResponse SendOrder(VtexIntegration integration, Models.SendOrderRequest requestCloseOrderIntegration)
         {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
-            var responseCloseOrderIntegration = integrationBusiness.SendOrder(requestCloseOrderIntegration);
+            var responseCloseOrderIntegration = integration.SendOrder(requestCloseOrderIntegration);
 
             if (responseCloseOrderIntegration.Status != Models.SendOrderStatusEnum.Success)
             {
@@ -290,50 +254,18 @@ namespace Enginesoft.VtexIntegrationSample
 
             return responseCloseOrderIntegration;
         }
-
-        private static int SaveOrder(Domain.Client.Client client,
-            Domain.Client.ClientAddress billingAddress,
-            Domain.Client.ClientAddress deliveryAddress,
-            Domain.Order.SendOrderRequest requestCloseOrder,
-            string orderNumber,
-            string bankSlipUrl,
-            string paymentTransactionCode,
-            Domain.Purchase.PaymentConditionInformation paymentConditionInformation)
+        
+        private static Models.SendPaymentResponse SendPayment(VtexIntegration integration, Models.ClientIntegration clientIntegration, string supplierOrderNumber, string supplierTransactionCode, Models.PaymentConditionInformation paymentConditionInformation)
         {
-            int orderID = 0;
-
-            try
-            {
-                orderID = new Business.OrderBusiness().SaveOrderTest(requestCloseOrder, client, billingAddress, deliveryAddress, orderNumber, bankSlipUrl, paymentTransactionCode, paymentConditionInformation);
-                Log(string.Format("OrderID={0}", orderID));
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(string.Format("Erro ao salvar o pedido -- {0}", ex.Message));
-            }
-
-            return orderID;
-        }
-
-        private static Models.SendPaymentResponse SendPayment(int supplierID, Models.ClientIntegration clientIntegration, string supplierOrderNumber, string supplierTransactionCode, Models.PaymentConditionInformation paymentConditionInformation)
-        {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
             var request = new Models.SendPaymentRequest(clientIntegration, supplierOrderNumber, supplierTransactionCode, paymentConditionInformation);
-            var response = integrationBusiness.SendPayment(request);
+            var response = integration.SendPayment(request);
             return response;
         }
 
-        private static Models.GetPaymentStatusResponse GetPaymentStatus(int supplierID, Models.ClientIntegration clientIntegration, string supplierTransactionCode)
+        private static Models.GetPaymentStatusResponse GetPaymentStatus(VtexIntegration integration, Models.ClientIntegration clientIntegration, string supplierTransactionCode)
         {
-            var integrationBusiness = new Business.IntegrationBusiness(supplierID);
-            integrationBusiness.LogEvent += Log;
-            integrationBusiness.LogServiceCallEvent += LogServiceCall;
-
             var request = new Models.GetPaymentStatusRequest(clientIntegration, supplierTransactionCode);
-            var response = integrationBusiness.GetPaymentStatus(request);
+            var response = integration.GetPaymentStatus(request);
             return response;
         }
 
@@ -351,7 +283,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
         }
 
-        private static void LogServiceCall(string supplierName, string message, int? clientID)
+        private static void LogServiceCall(string message)
         {
             Console.WriteLine(Utils.MaxLength(message, 600, "..."));
 
@@ -361,28 +293,7 @@ namespace Enginesoft.VtexIntegrationSample
                 streamWriter.WriteLine(string.Format("{0}\t{1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), message));
             }
         }
-
-        private static void MergeDictionaries(Dictionary<string, string> cookies, Dictionary<string, string> cookiesToAdd)
-        {
-            try
-            {
-                if (cookiesToAdd == null)
-                    return;
-
-                foreach (var item in cookiesToAdd)
-                {
-                    if (!cookies.ContainsKey(item.Key))
-                        cookies.Add(item.Key, item.Value);
-                    else
-                        cookies[item.Key] = item.Value;
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
-
+        
         #endregion
     }
 }

@@ -8,26 +8,31 @@ namespace Enginesoft.VtexIntegrationSample.Models
 {
     public class Address
     {
-        public string AddressType { get; private set; }
+        public string AddressType { get; set; }
 
-        public string ReceiverName { get; private set; }
+        public string ReceiverName { get; set; }
 
-        public string Street { get; private set; }
+        public string Street { get; set; }
 
-        public string Number { get; private set; }
+        public string Number { get; set; }
 
-        public string Complement { get; private set; }
+        public string Complement { get; set; }
 
-        public string Quarter { get; private set; }
+        public string Quarter { get; set; }
 
-        public string Zipcode { get; private set; }
+        public string Zipcode { get; set; }
 
-        public string City { get; private set; }
+        public string City { get; set; }
 
-        public string State { get; private set; }
+        public string State { get; set; }
 
-        public string Country { get; private set; }
+        public string Country { get; set; }
         
+        public Address()
+        {
+
+        }
+
         public Address(string addressType, string receiverName, string street, string number, string complement, string quarter, string zipcode, string city, string state, string country)
         {
             this.AddressType = addressType;

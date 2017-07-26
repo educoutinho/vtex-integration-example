@@ -26,20 +26,6 @@ namespace Enginesoft.VtexIntegrationSample.Models
         public string ItemSubCategory { get; set; }
 
         public string Description { get; set; }
-
-        public string AdditionalInfo { get; set; }
-
-        //QdeMnmVndMer- quantidade mínima de embalagens que o produto é vendido
-        public int MinimumSaleQuantity { get; set; }
-
-        //VLRCNVUNDVNDMER- quantas unidades a embalagem tem
-        public int ItemsInPackage { get; set; }
-
-        //QDEUNDVNDCXAFRN- quantas embalagens a caixa fechada tem
-        public int PackagesInBox { get; set; }
-
-        //produto só pode ser vendido em quantidades múltiplas desse valor
-        public int MultipleQuantity { get; set; }
         
         public bool Active { get; set; }
 
@@ -47,8 +33,8 @@ namespace Enginesoft.VtexIntegrationSample.Models
 
         public override string ToString()
         {
-            return string.Format("IntegrationItem -- Barcode: {0}, SupplierItemCode: {1}, Name: {2}, Brand: {3}, UrlImage: {4}, ItemGroup: {5}, ItemCategory: {6}, ItemSubCategory: {7}, AdditionalInfo: {8}, MinimumSaleQuantity: {9}, MultipleQuantity: {10}",
-                this.Barcode, this.SupplierItemCode, this.Name, this.Brand, this.UrlImage, this.ItemGroup, this.ItemCategory, this.ItemSubCategory, this.AdditionalInfo, this.MinimumSaleQuantity, this.MultipleQuantity);
+            return string.Format("IntegrationItem -- Barcode: {0}, SupplierItemCode: {1}, Name: {2}, Brand: {3}, UrlImage: {4}, ItemGroup: {5}, ItemCategory: {6}, ItemSubCategory: {7}",
+                this.Barcode, this.SupplierItemCode, this.Name, this.Brand, this.UrlImage, this.ItemGroup, this.ItemCategory, this.ItemSubCategory);
         }
 
         public Item(string supplierItemCode)
@@ -57,8 +43,7 @@ namespace Enginesoft.VtexIntegrationSample.Models
         }
 
         public Item(string supplierItemCode, string barcode, string name, string brand, string urlImage, string itemGroup, string itemCategory,
-            string itemSubCategory, string additionalInfo, int minimumSaleQuantity, int itemsInPackage, int packagesInBox,
-            int multipleQuantity, string description, bool active, string sellerCode)
+            string itemSubCategory, string description, string sellerCode)
         {
             this.SupplierItemCode = supplierItemCode;
             this.Barcode = barcode;
@@ -68,13 +53,7 @@ namespace Enginesoft.VtexIntegrationSample.Models
             this.ItemGroup = itemGroup;
             this.ItemCategory = itemCategory;
             this.ItemSubCategory = itemSubCategory;
-            this.AdditionalInfo = additionalInfo;
-            this.MinimumSaleQuantity = minimumSaleQuantity;
-            this.ItemsInPackage = itemsInPackage;
-            this.PackagesInBox = packagesInBox;
-            this.MultipleQuantity = multipleQuantity;
             this.Description = description;
-            this.Active = active;
             this.SellerCode = sellerCode;
         }
 
@@ -106,10 +85,7 @@ namespace Enginesoft.VtexIntegrationSample.Models
             
             if (!string.IsNullOrEmpty(this.Description))
                 this.Description = this.Description.Trim().RemoveHtmlTags();
-
-            if (!string.IsNullOrEmpty(this.AdditionalInfo))
-                this.AdditionalInfo = this.AdditionalInfo.Trim().RemovePageBreak().RemoveHtmlTags();
-
+            
             if (!string.IsNullOrEmpty(this.SellerCode))
                 this.SellerCode = this.SellerCode.Trim().RemovePageBreak();
         }

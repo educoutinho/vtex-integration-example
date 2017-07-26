@@ -213,5 +213,136 @@ namespace Enginesoft.VtexIntegrationSample
 
             return jObject;
         }
+
+        //Cada item tem suas formas de entrega (PAC, SEDEX, ...) com valor e prazo de entrega, esse método consolida para cada tipo de entrega o preço e data para entregar todos os itens da lista
+        public static List<Models.ShippingInformation> ConsolidateShippingInformation(List<Models.ItemPrice> itemPrices)
+        {
+            var listRet = new List<Models.ShippingInformation>();
+
+            for (int i = 0; i < itemPrices.Count; i++)
+            {
+                var itemPrice = itemPrices[i];
+
+                foreach (var shipping in itemPrice.ShippingInformations)
+                {
+                    var shippingTime = new Models.ShippingTime(shipping.ShippingTime.Days, shipping.ShippingTime.IsBusinessDays);
+
+                    if (itemPrices.Where(a => a.ShippingInformations.Any(x => x.ShippingTypeID == shipping.ShippingTypeID)).Count() < itemPrices.Count)
+                    {
+                        //Esse tipo de frete não aparece em todos os itens
+                        continue;
+                    }
+
+                    if (i == 0)
+                    {
+                        listRet.Add(new Models.ShippingInformation(shipping.ShippingTypeID, shipping.Name, shipping.Price, shippingTime));
+                    }
+                    else
+                    {
+                        var itemRet = listRet.FirstOrDefault(a => a.ShippingTypeID == shipping.ShippingTypeID);
+
+                        //soma o preço e obtém a maior data para a entrega
+                        itemRet.IncrementShippingTime(shipping.Price, shippingTime);
+                    }
+                }
+            }
+
+            return listRet;
+        }
+
+        public static Models.PaymentTypesEnum GetPaymentConditionTypeID(string implementation)
+        {
+            if (string.IsNullOrEmpty(implementation))
+                throw new ArgumentNullException(nameof(implementation));
+
+            if (implementation.Equals("Vtex.PaymentGateway.CreditCard.Elo", StringComparison.CurrentCultureIgnoreCase))
+                return Models.PaymentTypesEnum.Elo;
+
+            if (implementation.Equals("Vtex.PaymentGateway.CreditCard.Amex", StringComparison.CurrentCultureIgnoreCase))
+                return Models.PaymentTypesEnum.Amex;
+
+            if (implementation.Equals("Vtex.PaymentGateway.CreditCard.Mastercard", StringComparison.CurrentCultureIgnoreCase))
+                return Models.PaymentTypesEnum.Mastercard;
+
+            if (implementation.Equals("Vtex.PaymentGateway.CreditCard.Visa", StringComparison.CurrentCultureIgnoreCase))
+                return Models.PaymentTypesEnum.Visa;
+
+            if (implementation.Equals("Vtex.PaymentGateway.CreditCard.Diners", StringComparison.CurrentCultureIgnoreCase))
+                return Models.PaymentTypesEnum.Diners;
+
+            if (implementation.Equals("Vtex.PaymentGateway.CreditCard.Hipercard", StringComparison.CurrentCultureIgnoreCase))
+                return Models.PaymentTypesEnum.Hipercard;
+
+            return Models.PaymentTypesEnum.None;
+        }
+
+        public static string HideCreditCardNumber(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            const int QUANTITY_START = 4;
+            const int QUANTITY_END = 3;
+
+            string ret = new string('*', text.Length);
+            if (text.Length > (QUANTITY_START + QUANTITY_END))
+            {
+                ret = string.Concat(
+                    text.Substring(0, QUANTITY_START),
+                    new string('*', text.Length - (QUANTITY_START + QUANTITY_END)),
+                    text.Substring(text.Length - (QUANTITY_END + 1), QUANTITY_END)
+                );
+            }
+
+            return ret;
+        }
+
+        public static string HideCreditCardValidationCode(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            string ret = new string('*', text.Length);
+            return ret;
+        }
+
+        public static void MergeDictionaries(Dictionary<string, string> cookies, Dictionary<string, string> cookiesToAdd)
+        {
+            try
+            {
+                if (cookiesToAdd == null)
+                    return;
+
+                foreach (var item in cookiesToAdd)
+                {
+                    if (!cookies.ContainsKey(item.Key))
+                        cookies.Add(item.Key, item.Value);
+                    else
+                        cookies[item.Key] = item.Value;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        public static string GetConfigDirectory()
+        {
+            string path = Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly());
+
+            if (path.IndexOf("debug", StringComparison.CurrentCultureIgnoreCase) != -1 || path.IndexOf("release", StringComparison.CurrentCultureIgnoreCase) != -1)
+            {
+                var directoryInfo = new System.IO.DirectoryInfo(path);
+                path = directoryInfo.Parent.Parent.FullName.ToString();
+            }
+
+            path = System.IO.Path.Combine(path, "config");
+
+            if (!System.IO.Directory.Exists(path))
+                System.IO.Directory.CreateDirectory(path);
+
+            return path;
+        }
     }
 }

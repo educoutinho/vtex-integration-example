@@ -14,16 +14,13 @@ namespace Enginesoft.VtexIntegrationSample.Models
 
         public int Quantity { get; private set; }
         
-        public int PackagesInBox { get; private set; }
-
         public string SellerCode { get; private set; }
 
-        public ItemGetItemsPriceRequest(string supplierItemCode, string itemBarcode, int quantity, int packagesInBox, string sellerCode)
+        public ItemGetItemsPriceRequest(string supplierItemCode, string itemBarcode, int quantity, string sellerCode)
         {
             this.SupplierItemCode = supplierItemCode;
             this.ItemBarcode = itemBarcode;
             this.Quantity = quantity;
-            this.PackagesInBox = packagesInBox;
             this.SellerCode = sellerCode;
         }
     }

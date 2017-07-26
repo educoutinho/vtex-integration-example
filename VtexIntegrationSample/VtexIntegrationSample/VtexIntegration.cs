@@ -40,14 +40,25 @@ namespace Enginesoft.VtexIntegrationSample
         {
             Models.IntegrationConfiguration config;
 
-            string path = System.IO.Path.Combine(Utils.GetExecutableFolderPath(System.Reflection.Assembly.GetExecutingAssembly()), "config.xml");
-
+            string directoryPath = Utils.GetConfigDirectory();
+            string path = System.IO.Path.Combine(directoryPath, "vtex.xml");
+            
             if (!System.IO.File.Exists(path))
             {
                 System.Diagnostics.Debugger.Break();
-                //Arquivo de config não encontrado, criando um arquivo "config.xml" modelo, preencha esse arquivo com os dados da sua conta de teste
+                //Arquivo de config não encontrado, será criado um arquivo "config.xml" modelo, preencha esse arquivo com os dados da sua conta de teste
 
                 config = new Models.IntegrationConfiguration();
+                config.CommerceApiUrl = "https://install.vtexcommercestable.com.br";
+                config.PaymentApiUrl = "https://install.vtexpayments.com.br";
+                config.ServiceKey = "teste@teste.com.br";
+                config.ServiceToken = "DSFEWFEWFRRGEGREGER";
+                config.OrderServiceKey = "vtexappkey-teste-ASASSS";
+                config.OrderServiceToken = "FWFWEFWEFREGERGERGERGSSDSDFWWFEWFEWFEW";
+                config.PartnerCode = "XXX";
+                config.TradePolicyCode = "1";
+                config.MerchantName = "install";
+
                 using (var streamWriter = new System.IO.StreamWriter(path))
                 {
                     new System.Xml.Serialization.XmlSerializer(typeof(Models.IntegrationConfiguration)).Serialize(streamWriter, config);
@@ -63,12 +74,11 @@ namespace Enginesoft.VtexIntegrationSample
                 }
 
                 this.ValidateIntegrationConfiguration(config);
-
                 this.Config = config;
             }
             catch (System.Exception ex)
             {
-                throw new System.InvalidOperationException(string.Format("Erro na leitura do arquivo de configurações de integração (SupplierID={0}) -- path: {1} -- {2}", this.SupplierID, path, ex.Message), ex);
+                throw new System.InvalidOperationException(string.Format("Erro na leitura do arquivo de configurações de integração -- path: {0} -- {1}", path, ex.Message), ex);
             }
         }
 
@@ -102,7 +112,7 @@ namespace Enginesoft.VtexIntegrationSample
                 throw new System.InvalidOperationException("Chave \"MerchantName\" não preenchido");
         }
                 
-        public override Models.GetOrderStatusResponse GetOrderStatus(Models.GetOrderStatusRequest request)
+        public Models.GetOrderStatusResponse GetOrderStatus(Models.GetOrderStatusRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -178,78 +188,8 @@ namespace Enginesoft.VtexIntegrationSample
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
-
-        public override Models.ListBankSlipResponse ListBankSlip(Models.ListBankSlipRequest request)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Models.LoginClientResponse LoginClient(Models.ClientIntegration clientIntegration)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Models.RegisterClientResponse RegisterClient(Models.ClientIntegration client)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void UpdateAllItemsServiceOperation(System.Threading.CancellationTokenSource cancelationTokenSource)
-        {
-            //ATENÇÃO: Atualização de itens deve ser realizada através do endpoint de notificação, para refazer a carga na VTEX devem executar a atualização de todo indice
-
-            this.Log(">> Operação: UpdateItems -- Iniciando atualização dos itens");
-
-            //Chama a API da VTEX para obter a lista de itens
-            var requestListItems = new Models.ListItemsRequest();
-            var responseListItems = this.ListItems(requestListItems);
-
-            var listItems = responseListItems.Items;
-            var listItemBlocks = UtilsIntegration.OrganizeListInBlocks(listItems, 20);
-
-            if (cancelationTokenSource != null && cancelationTokenSource.IsCancellationRequested)
-                return;
-
-            foreach (var block in listItemBlocks)
-            {
-                try
-                {
-                    //Chama o evento "integration_ItemRead" em Business.IntegrationBusiness para que ele atualize no BD os dados do item (caso necessário)
-                    ReportItemRead(block);
-
-                    if (cancelationTokenSource != null && cancelationTokenSource.IsCancellationRequested)
-                        return;
-
-                    //Chama a API da VTEX para obter os preços
-                    var listItemsGetItemsPrices = block.Select(a => new Models.ItemGetItemsPriceRequest(a.SupplierItemCode, a.Barcode, 1, a.PackagesInBox, a.SellerCode)).ToList();
-                    var requestGetItemsPrices = new Models.GetItemsPriceRequest(null, null, listItemsGetItemsPrices, null);
-                    var responseGetItemsPrice = GetItemsPrice(requestGetItemsPrices);
-
-                    if (cancelationTokenSource != null && cancelationTokenSource.IsCancellationRequested)
-                        return;
-
-                    //Chama o evento "integration_ItemPriceRead" em Business.IntegrationBusiness para que ele atualize no BD os dados do item (caso necessário)
-                    ReportItemPriceRead(responseGetItemsPrice.ItemsList);
-                }
-                catch (System.Exception ex)
-                {
-                    System.Diagnostics.Debugger.Break();
-                    throw new System.InvalidOperationException(string.Format("Erro ao atualizar o items no Banco de dados -- {0} -- barcodes: {1}", ex.Message, string.Join(",", block.Select(a => a.Barcode))), ex);
-                }
-            }
-
-            if (cancelationTokenSource != null && cancelationTokenSource.IsCancellationRequested)
-                return;
-
-            ReportItemPriceSave();
-        }
-
-        public override void UpdateItemChangeQueueServiceOperation()
-        {
-            throw new NotImplementedException();
-        }
         
-        public override Models.GetItemResponse GetItem(Models.GetItemRequest request)
+        public Models.GetItemResponse GetItem(Models.GetItemRequest request)
         {
             var maxAttempts = 3;
             Models.Item item = null;
@@ -292,7 +232,7 @@ namespace Enginesoft.VtexIntegrationSample
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
-                        json = Utils.Text.RemoveNonVisibleCharacters(restSharpResponse.Content);
+                        json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
                         this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
@@ -310,7 +250,7 @@ namespace Enginesoft.VtexIntegrationSample
                     }
                 }
 
-                skuInformation = JsonUtils.Deserialize<ModelsVtex.SkuInformationResponse>(json);
+                skuInformation = Utils.JsonDeserialize<ModelsVtex.SkuInformationResponse>(json);
 
                 GetCategoryNames(skuInformation.ProductCategories, out itemGroup, out itemCategory, out itemSubCategory);
 
@@ -338,13 +278,7 @@ namespace Enginesoft.VtexIntegrationSample
                     itemGroup: itemGroup,
                     itemCategory: itemCategory,
                     itemSubCategory: itemSubCategory,
-                    minimumSaleQuantity: 0,
-                    itemsInPackage: 0,
-                    packagesInBox: 0,
-                    multipleQuantity: 0,
                     description: skuInformation.ProductDescription,
-                    additionalInfo: "",
-                    active: skuInformation.IsActive,
                     sellerCode: sellerCode
                 );
 
@@ -392,7 +326,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
         }
 
-        public override Models.GetItemsPriceResponse GetItemsPrice(Models.GetItemsPriceRequest request)
+        public Models.GetItemsPriceResponse GetItemsPrice(Models.GetItemsPriceRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -455,7 +389,7 @@ namespace Enginesoft.VtexIntegrationSample
                         foreach (var cookie in restSharpResponse.Cookies)
                             cookies.Add(cookie.Name, cookie.Value);
 
-                        json = Utils.Text.RemoveNonVisibleCharacters(restSharpResponse.Content);
+                        json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
                         this.LogServiceCall(
                             string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
@@ -475,7 +409,7 @@ namespace Enginesoft.VtexIntegrationSample
                     }
                 }
 
-                obj = JsonUtils.Deserialize<ModelsVtex.SkuPriceResponse>(json);
+                obj = Utils.JsonDeserialize<ModelsVtex.SkuPriceResponse>(json);
 
                 Models.ItemPrice itemPrice;
                 for (int i = 0; i < obj.items.Count; i++)
@@ -553,7 +487,7 @@ namespace Enginesoft.VtexIntegrationSample
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
 
-            var listConsolidateShippingInformations = UtilsIntegration.ConsolidateShippingInformation(listItems);
+            var listConsolidateShippingInformations = Utils.ConsolidateShippingInformation(listItems);
             var response = new Models.GetItemsPriceResponse(Models.GetItemsPriceStatusEnum.Success, "OK", "200", listItems, listConsolidateShippingInformations, listPaymentConditions, cookies);
             return response;
         }
@@ -640,7 +574,6 @@ namespace Enginesoft.VtexIntegrationSample
                 var requestLogisticInfo = new ModelsVtex.SendOrderRequest.LogisticsInfo();
                 requestLogisticInfo.itemIndex = i;
                 requestLogisticInfo.selectedSla = item.ShippingInformation.Name;
-                //TODO: Como preencher o lockTTL?
                 requestLogisticInfo.lockTTL = "8bd"; //período de reserva, obrigatório
                 requestLogisticInfo.shippingEstimate = item.ShippingInformation.ShippingTime.ToStringVtex();
                 requestLogisticInfo.price = Convert.ToInt32(item.ShippingInformation.Price * 100);
@@ -662,7 +595,7 @@ namespace Enginesoft.VtexIntegrationSample
             return requestObj;
         }
 
-        public override Models.SendOrderResponse SendOrder(Models.SendOrderRequest request)
+        public Models.SendOrderResponse SendOrder(Models.SendOrderRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -720,7 +653,7 @@ namespace Enginesoft.VtexIntegrationSample
                         foreach (var cookie in restSharpResponse.Cookies)
                             cookies.Add(cookie.Name, cookie.Value);
 
-                        json = Utils.Text.RemoveNonVisibleCharacters(restSharpResponse.Content);
+                        json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
                         this.LogServiceCall(
                             string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
@@ -730,7 +663,7 @@ namespace Enginesoft.VtexIntegrationSample
                         if (restSharpResponse.StatusCode == System.Net.HttpStatusCode.OK || restSharpResponse.StatusCode == System.Net.HttpStatusCode.Created)
                         {
                             //sucesso
-                            responseObj = JsonUtils.Deserialize<ModelsVtex.SendOrderResponse>(json);
+                            responseObj = Utils.JsonDeserialize<ModelsVtex.SendOrderResponse>(json);
                         }
                         /*else if (restSharpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
                         {
@@ -786,7 +719,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
         }
 
-        public override Models.SendPaymentResponse SendPayment(Models.SendPaymentRequest request)
+        public Models.SendPaymentResponse SendPayment(Models.SendPaymentRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -869,10 +802,10 @@ namespace Enginesoft.VtexIntegrationSample
                         //oculta dados sigilosos de cartão do log
 
                         if (!string.IsNullOrEmpty(objPayment.fields.cardNumber))
-                            json = json.Replace(objPayment.fields.cardNumber, UtilsIntegration.HideCreditCardNumber(objPayment.fields.cardNumber));
+                            json = json.Replace(objPayment.fields.cardNumber, Utils.HideCreditCardNumber(objPayment.fields.cardNumber));
 
                         if (!string.IsNullOrEmpty(objPayment.fields.validationCode))
-                            json = json.Replace(objPayment.fields.validationCode, UtilsIntegration.HideCreditCardValidationCode(objPayment.fields.validationCode));
+                            json = json.Replace(objPayment.fields.validationCode, Utils.HideCreditCardValidationCode(objPayment.fields.validationCode));
 
                         this.LogServiceCall(
                             string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nCookies: {3}\r\nRequest: {4}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), GetRequestCookies(restSharpRequest), json));
@@ -885,7 +818,7 @@ namespace Enginesoft.VtexIntegrationSample
                         foreach (var cookie in restSharpResponse.Cookies)
                             cookies.Add(cookie.Name, cookie.Value);
 
-                        json = Utils.Text.RemoveNonVisibleCharacters(restSharpResponse.Content);
+                        json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
                         this.LogServiceCall(
                             string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nCookies: {4}\r\nResponse: {5}\r\n{6}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), GetResponseCookies(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
@@ -906,7 +839,7 @@ namespace Enginesoft.VtexIntegrationSample
                         else if (restSharpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest)
                         {
                             //foi retornado erro 400
-                            responseObj = JsonUtils.Deserialize<ModelsVtex.SendPaymentResponse>(json);
+                            responseObj = Utils.JsonDeserialize<ModelsVtex.SendPaymentResponse>(json);
                             return Models.SendPaymentResponse.CreateErrorResponse(Models.SendPaymentStatusEnum.Error, (responseObj != null && !string.IsNullOrEmpty(responseObj.message) ? responseObj.message : "Erro no envio do pagamento"), serviceCode);
                         }
                         else
@@ -935,7 +868,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
         }
 
-        public override Models.CompleteOrderResponse CompleteOrder(Models.CompleteOrderRequest request)
+        public Models.CompleteOrderResponse CompleteOrder(Models.CompleteOrderRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -1024,7 +957,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
         }
 
-        public override Models.ListPaymentConditionsResponse ListPaymentConditions()
+        public Models.ListPaymentConditionsResponse ListPaymentConditions()
         {
             var maxAttempts = 3;
 
@@ -1054,7 +987,7 @@ namespace Enginesoft.VtexIntegrationSample
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
-                        json = Utils.Text.RemoveNonVisibleCharacters(restSharpResponse.Content);
+                        json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
                         this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {4} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
@@ -1072,9 +1005,9 @@ namespace Enginesoft.VtexIntegrationSample
                     }
                 }
 
-                var list = JsonUtils.Deserialize<List<ModelsVtex.PaymentConditionResponse>>(json);
+                var list = Utils.JsonDeserialize<List<ModelsVtex.PaymentConditionResponse>>(json);
 
-                var listRet = list.Select(a => new Models.PaymentCondition(a.id.ToString(), a.name, a.groupName, UtilsIntegration.GetPaymentConditionTypeID(a.implementation), 0, null)).ToList();
+                var listRet = list.Select(a => new Models.PaymentCondition(a.id.ToString(), a.name, a.groupName, Utils.GetPaymentConditionTypeID(a.implementation), 0, null)).ToList();
 
                 var response = new Models.ListPaymentConditionsResponse(listRet);
                 return response;
@@ -1087,7 +1020,7 @@ namespace Enginesoft.VtexIntegrationSample
             }
         }
 
-        public override Models.GetPaymentStatusResponse GetPaymentStatus(Models.GetPaymentStatusRequest request)
+        public Models.GetPaymentStatusResponse GetPaymentStatus(Models.GetPaymentStatusRequest request)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
@@ -1128,7 +1061,7 @@ namespace Enginesoft.VtexIntegrationSample
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
-                        json = Utils.Text.RemoveNonVisibleCharacters(restSharpResponse.Content);
+                        json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
                         this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
@@ -1148,7 +1081,7 @@ namespace Enginesoft.VtexIntegrationSample
                     }
                 }
 
-                obj = JsonUtils.Deserialize<ModelsVtex.GetPaymentStatusResponse>(json);
+                obj = Utils.JsonDeserialize<ModelsVtex.GetPaymentStatusResponse>(json);
 
                 var ret = new Models.GetPaymentStatusResponse();
                 ret.Status = Models.GetPaymentStatusEnum.Success;
@@ -1234,7 +1167,7 @@ namespace Enginesoft.VtexIntegrationSample
 
         #region LogServiceCall
 
-        public delegate void LogServiceCallEventHandler(string supplierName, string message, int? clientID);
+        public delegate void LogServiceCallEventHandler(string message);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly")]
         public event LogServiceCallEventHandler LogServiceCallEvent;
@@ -1244,7 +1177,7 @@ namespace Enginesoft.VtexIntegrationSample
             System.Diagnostics.Debug.WriteLine(message);
 
             if (this.LogServiceCallEvent != null)
-                this.LogServiceCallEvent(string.Format("SupplierID={0}", this.SupplierID), message, clientID);
+                this.LogServiceCallEvent(message);
         }
 
         #endregion
