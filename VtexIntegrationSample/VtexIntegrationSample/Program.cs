@@ -25,13 +25,12 @@ namespace Enginesoft.VtexIntegrationSample
             
             //Dados para teste
             string shippingTypeID = "SEDEX";
-            var paymentTypeID = Models.PaymentTypesEnum.Amex;
             
             //Itens para enviar no pedido
             var listItems = new List<Models.Item>();
             listItems.Add(new Models.Item("988", "7894854031548", "Máscara TNT Tipo Calcinha Branca SKY", null, null, null, null, null, null, "protcap"));
             
-            //Dados do cliente
+            //Dados do cliente (obtidos do arquivo de cnofig)
             var clientIntegration = GetClientIntegration();
             var deliveryAddressIntegration = GetClientDeliveryAddress();
             
@@ -42,10 +41,10 @@ namespace Enginesoft.VtexIntegrationSample
             var responseGetItemsPrice = CheckCart(integration, clientIntegration, deliveryAddressIntegration, listItems);
             var jsonGetItemsPrice = Utils.JsonSerialize(responseGetItemsPrice);
             Utils.MergeDictionaries(cookies, responseGetItemsPrice.Cookies);
-            System.Diagnostics.Debugger.Break();
-
+            
             //---- payment information
 
+            //TODO: Você precisa consultar esses códigos na instalação da VTEX
             //1   American Express
             //2   Visa
             //3   Diners
@@ -61,7 +60,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             var paymentCondition = new Models.PaymentCondition("1", "American Express", "creditCardPaymentGroup", Models.PaymentTypesEnum.Amex, 0, new List<Models.PaymentInstallment>());
             var paymentConditionInformation = new Models.PaymentConditionInformation(paymentCondition, 0, 1, 0);
-
+            
             paymentConditionInformation.SetCreditCardInformation("376600000000000", "Jose da Silva", 2022, 12, "0000", "66186378489");
             //Ei você debugando, rode esse comando novamente no Immediate Window enviando dados válidos de cartão
             System.Diagnostics.Debugger.Break();
@@ -100,7 +99,7 @@ namespace Enginesoft.VtexIntegrationSample
             paymentConditionInformation.SetValue(orderTotalValue);
             paymentConditionInformation.SetInstallmentValue(installmentQuantity, installmentsValue);
 
-            var paymentConditionIntegration = new Models.PaymentCondition(paymentCondition.PaymentConditionCode, paymentCondition.Name, paymentCondition.GroupName, paymentTypeID, orderTotalValue, new List<Models.PaymentInstallment>());
+            var paymentConditionIntegration = new Models.PaymentCondition(paymentCondition.PaymentConditionCode, paymentCondition.Name, paymentCondition.GroupName, paymentCondition.PaymentConditionTypeID, orderTotalValue, new List<Models.PaymentInstallment>());
             var paymentConditionInformationIntegration = new Models.PaymentConditionInformation(paymentConditionIntegration, paymentConditionInformation.Value, paymentConditionInformation.InstallmentQuantity, paymentConditionInformation.InstallmentValue);
             paymentConditionInformationIntegration.SetCreditCardInformation(paymentConditionInformation.CardNumber, paymentConditionInformation.HolderName, paymentConditionInformation.DueYear, paymentConditionInformation.DueMonth, paymentConditionInformation.ValidationCode, paymentConditionInformation.DocumentNumber);
 
@@ -110,7 +109,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             var requestCloserOrder = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderListItems, deliveryAddressIntegration, paymentConditionInformation, cookies);
             var requestCloseOrderIntegration = new Models.SendOrderRequest(clientIntegration, orderTotalValue, requestCloseOrderIntegrationListItems, deliveryAddressIntegration, paymentConditionInformationIntegration, cookies);
-
+            
             //----- send order
             System.Diagnostics.Debugger.Break();
             var responseCloseOrder = SendOrder(integration, requestCloseOrderIntegration);
@@ -118,6 +117,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             //----- save order
             //TODO: Salvar pedido no bd
+            Log(string.Format("OrderID=0, SupplierOrderNumber={0}", responseCloseOrder.OrderNumber));
 
             //---- send payment
             System.Diagnostics.Debugger.Break();
@@ -127,7 +127,7 @@ namespace Enginesoft.VtexIntegrationSample
             System.Diagnostics.Debugger.Break();
             var responseCompleteOrder = integration.CompleteOrder(new Models.CompleteOrderRequest(clientIntegration, responseCloseOrder.OrderNumber, cookies));
             Utils.MergeDictionaries(cookies, requestCloseOrderIntegration.Coookies);
-
+            
             //------ get payment information
             System.Diagnostics.Debugger.Break();
             var paymentStatus = GetPaymentStatus(integration, clientIntegration, responseCloseOrder.PaymentTransactionCode);

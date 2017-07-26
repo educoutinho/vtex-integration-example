@@ -11,7 +11,7 @@ namespace Enginesoft.VtexIntegrationSample.Models
         None,
 
         Pendent,
-
+        
         Approved,
 
         Cancelled

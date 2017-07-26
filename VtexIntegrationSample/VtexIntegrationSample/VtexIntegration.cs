@@ -880,7 +880,9 @@ namespace Enginesoft.VtexIntegrationSample
             Stopwatch stopwatch = null;
 
             var restSharpClient = this.restSharpClientCommerce;
-            string url = string.Format("checkout/gatewayCallback/{0}/success", request.SupplierOrderNumber);
+            
+            //NOTA: Por incrível que pareça essa url é case sensitive, se você enviar "/success" não dá erro mas o pedido é cancelado
+            string url = string.Format("checkout/gatewayCallback/{0}/Success", request.SupplierOrderNumber);
             string fullUrl = string.Concat(restSharpClient.BaseUrl, url);
 
             var restSharpRequest = new RestSharp.RestRequest(url, RestSharp.Method.GET);
@@ -1089,11 +1091,25 @@ namespace Enginesoft.VtexIntegrationSample
                 ret.ServiceCode = serviceCode;
 
                 if (string.Equals(obj.status, "Started", StringComparison.CurrentCultureIgnoreCase))
+                {
                     ret.PaymentStatus = Models.PaymentStatusEnum.Pendent;
+                }
+                else if (string.Equals(obj.status, "AnalyzingRisk", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    ret.PaymentStatus = Models.PaymentStatusEnum.Pendent;
+                }
+                else if (string.Equals(obj.status, "Finished", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    ret.PaymentStatus = Models.PaymentStatusEnum.Approved;
+                }
                 else if (string.Equals(obj.status, "Cancelled", StringComparison.CurrentCultureIgnoreCase))
+                {
                     ret.PaymentStatus = Models.PaymentStatusEnum.Cancelled;
+                }
                 else
+                {
                     throw new System.InvalidOperationException(string.Format("Status da transação de pagamento é inválido (status:\"{0}\")", obj.status));
+                }
 
                 return ret;
             }
