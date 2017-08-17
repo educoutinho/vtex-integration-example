@@ -144,14 +144,14 @@ namespace Enginesoft.VtexIntegrationSample
                 {
                     try
                     {
-                        this.LogServiceCall(string.Format("[{0}] req {1}", restSharpRequest.Method, fullUrl));
+                        this.LogServiceCall("GetOrderStatus request", string.Format("[{0}] req {1}", restSharpRequest.Method, fullUrl), null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
-                        this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("GetOrderStatus response", string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json), stopwatch.ElapsedMilliseconds);
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -184,7 +184,7 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("GetOrderStatus exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
@@ -226,14 +226,14 @@ namespace Enginesoft.VtexIntegrationSample
                 {
                     try
                     {
-                        this.LogServiceCall(string.Format("[{0}] req {1} Request", restSharpRequest.Method, fullUrl));
+                        this.LogServiceCall("GetItem request", string.Format("[{0}] req {1} Request", restSharpRequest.Method, fullUrl), null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
-                        this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("GetItem response", string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json), stopwatch.ElapsedMilliseconds);
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -287,7 +287,7 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("GetItem exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
 
@@ -363,7 +363,7 @@ namespace Enginesoft.VtexIntegrationSample
 
             string json = null;
             
-            var listItems = new List<Models.ItemPrice>();
+            var listItemPrices = new List<Models.ItemPrice>();
             var listPaymentConditions = new List<Models.PaymentCondition>();
 
             RestSharp.IRestResponse restSharpResponse = null;
@@ -377,8 +377,7 @@ namespace Enginesoft.VtexIntegrationSample
                     {
                         json = Utils.JsonSerialize(requestObj);
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
+                        this.LogServiceCall("GetItemsPrice request", string.Format("[{0}] req {1} -- Request: {2}", restSharpRequest.Method, fullUrl, json), null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
@@ -386,8 +385,9 @@ namespace Enginesoft.VtexIntegrationSample
                         
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("GetItemsPrice response",
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json),
+                            stopwatch.ElapsedMilliseconds);
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -405,7 +405,7 @@ namespace Enginesoft.VtexIntegrationSample
                 }
 
                 obj = Utils.JsonDeserialize<ModelsVtex.SkuPriceResponse>(json);
-
+                
                 Models.ItemPrice itemPrice;
                 for (int i = 0; i < obj.items.Count; i++)
                 {
@@ -426,14 +426,14 @@ namespace Enginesoft.VtexIntegrationSample
                         0,
                         item.Quantity);
 
-                    listItems.Add(itemPrice);
+                    listItemPrices.Add(itemPrice);
                 }
 
                 string shippingEstimate;
                 Models.ShippingInformation shippingPrice;
                 foreach (var nodeLogistics in obj.logisticsInfo)
                 {
-                    var item = listItems.FirstOrDefault(a => a.ItemIndex == nodeLogistics.itemIndex);
+                    var item = listItemPrices.FirstOrDefault(a => a.ItemIndex == nodeLogistics.itemIndex);
                     if (item == null)
                         throw new System.InvalidOperationException(string.Format("node \"logisticsInfo\" referencia um itemIndex={0} que não está na resposta", nodeLogistics.itemIndex));
 
@@ -469,21 +469,45 @@ namespace Enginesoft.VtexIntegrationSample
 
                     paymentInstallmentList = new List<Models.PaymentInstallment>();
                     foreach (var nodeInstallment in nodeInstallmentOption.installments)
-                        paymentInstallmentList.Add(new Models.PaymentInstallment(nodeInstallment.count, (decimal)nodeInstallment.value / 100, (decimal)nodeInstallment.total / 100));
+                        paymentInstallmentList.Add(new Models.PaymentInstallment(nodeInstallment.count, (decimal)nodeInstallment.value / 100, (decimal)nodeInstallment.total / 100, (decimal)nodeInstallment.interestRate / 100));
 
-                    paymentCondition = new Models.PaymentCondition(paymentSystem.id.ToString(), nodeInstallmentOption.paymentName, nodeInstallmentOption.paymentGroupName, Models.PaymentTypesEnum.None, (decimal)nodeInstallmentOption.value / 100, paymentInstallmentList);
+                    paymentCondition = new Models.PaymentCondition(paymentSystem.id.ToString(), paymentSystem.groupName, nodeInstallmentOption.paymentName, Models.PaymentTypesEnum.None, (decimal)nodeInstallmentOption.value / 100, paymentInstallmentList);
                     listPaymentConditions.Add(paymentCondition);
+                }
+
+                //Itens sem estoque
+                for (int i = 0; i < request.ItemsList.Count; i++)
+                {
+                    var requestItem = request.ItemsList[i];
+                    itemPrice = listItemPrices.Where(a => string.Equals(a.SupplierItemCode, requestItem.SupplierItemCode)).FirstOrDefault();
+                    if (itemPrice == null)
+                    {
+                        itemPrice = new Models.ItemPrice(
+                            i,
+                            -1,
+                            requestItem.SupplierItemCode,
+                            requestItem.SellerCode,
+                            requestItem.ItemBarcode,
+                            0,
+                            0,
+                            0,
+                            requestItem.Quantity);
+
+                        itemPrice.SetStockInfo(false, 0);
+
+                        listItemPrices.Add(itemPrice);
+                    }
                 }
             }
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("GetItemsPrice exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
 
-            var listConsolidateShippingInformations = Utils.ConsolidateShippingInformation(listItems);
-            var response = new Models.GetItemsPriceResponse(Models.GetItemsPriceStatusEnum.Success, "OK", "200", listItems, listConsolidateShippingInformations, listPaymentConditions);
+            var listConsolidateShippingInformations = Utils.ConsolidateShippingInformation(listItemPrices);
+            var response = new Models.GetItemsPriceResponse(Models.GetItemsPriceStatusEnum.Success, "OK", "200", listItemPrices, listConsolidateShippingInformations, listPaymentConditions);
             return response;
         }
 
@@ -515,7 +539,7 @@ namespace Enginesoft.VtexIntegrationSample
                 requestItem.id = item.SupplierItemCode;
                 requestItem.quantity = item.Quantity;
                 requestItem.seller = item.SellerCode;
-                requestItem.price = Convert.ToInt32(item.Total * 100);
+                requestItem.price = Convert.ToInt32(item.Value * 100);
                 requestItem.bundleItems = new List<object>();
                 requestObj.items.Add(requestItem);
             }
@@ -636,8 +660,9 @@ namespace Enginesoft.VtexIntegrationSample
                     {
                         json = Utils.JsonSerialize(requestObj);
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
+                        this.LogServiceCall("SendOrder request",
+                            string.Format("[{0}] req {1} -- Request: {2}", restSharpRequest.Method, fullUrl, json),
+                            null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
@@ -645,8 +670,9 @@ namespace Enginesoft.VtexIntegrationSample
                                                 
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("SendOrder response",
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json),
+                            stopwatch.ElapsedMilliseconds);
 
                         serviceCode = ((int)restSharpResponse.StatusCode).ToString();
 
@@ -704,7 +730,7 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("SendOrder exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
@@ -743,25 +769,29 @@ namespace Enginesoft.VtexIntegrationSample
             var objPayment = new ModelsVtex.SendPaymentArrayItemRequest.Payment();
             objPayment.paymentSystem = Convert.ToInt32(request.PaymentConditionInformation.PaymentCondition.PaymentConditionCode);
             objPayment.paymentSystemName = request.PaymentConditionInformation.PaymentCondition.Name;
-            objPayment.groupName = request.PaymentConditionInformation.PaymentCondition.GroupName;
-            objPayment.currencyCode = null;
-            objPayment.installments = request.PaymentConditionInformation.InstallmentQuantity;
-            objPayment.value = Convert.ToInt32(request.PaymentConditionInformation.Value * 100);
-            objPayment.installmentsInterestRate = 0;
-            objPayment.installmentsValue = Convert.ToInt32(request.PaymentConditionInformation.InstallmentValue * 100);
-            objPayment.referenceValue = Convert.ToInt32(request.PaymentConditionInformation.Value * 100);
+            objPayment.groupName = request.PaymentConditionInformation.PaymentCondition.PaymentConditionGroupCode; //ex: "creditCardPaymentGroup"
+            objPayment.currencyCode = "BRL"; //moeda
+            objPayment.installments = request.PaymentConditionInformation.InstallmentQuantity; //numero de parcelas
+            objPayment.installmentsInterestRate = Convert.ToInt32(request.PaymentConditionInformation.InstallmentRate * 100); //taxa de juros
+            objPayment.installmentsValue = Convert.ToInt32(request.PaymentConditionInformation.InstallmentValue * 100); //valor da parcela
+            objPayment.referenceValue = Convert.ToInt32(request.PaymentConditionInformation.Value * 100); //valor sem juros
+            objPayment.value = Convert.ToInt32(request.PaymentConditionInformation.Value * 100); //valor total do pagamento
 
             objPayment.fields = new ModelsVtex.SendPaymentArrayItemRequest.Fields();
-            objPayment.fields.document = request.PaymentConditionInformation.DocumentNumber;
-            objPayment.fields.accountId = null;
-            objPayment.fields.addressId = null;
-            objPayment.fields.cardNumber = request.PaymentConditionInformation.CardNumber;
-            objPayment.fields.holderName = request.PaymentConditionInformation.HolderName;
-            objPayment.fields.dueDate = request.PaymentConditionInformation.GetDueDateVtexTest();
-            objPayment.fields.validationCode = request.PaymentConditionInformation.ValidationCode;
+            if (request.PaymentConditionInformation.PaymentCondition.PaymentConditionGroupCode.Equals("creditCardPaymentGroup"))
+            {
+                //dados do cartão
+                objPayment.fields.document = request.PaymentConditionInformation.DocumentNumber;
+                objPayment.fields.accountId = null;
+                objPayment.fields.addressId = null;
+                objPayment.fields.cardNumber = request.PaymentConditionInformation.CardNumber;
+                objPayment.fields.holderName = request.PaymentConditionInformation.HolderName;
+                objPayment.fields.dueDate = request.PaymentConditionInformation.GetDueDateVtexTest();
+                objPayment.fields.validationCode = request.PaymentConditionInformation.ValidationCode;
+            }
 
             objPayment.transaction = new ModelsVtex.SendPaymentArrayItemRequest.Transaction();
-            objPayment.transaction.id = request.SupplierTransactionCode;
+            objPayment.transaction.id = request.PaymentTransactionCode;
             objPayment.transaction.merchantName = this.Config.MerchantName;
             objPayment.transaction.payments = null;
 
@@ -796,8 +826,9 @@ namespace Enginesoft.VtexIntegrationSample
                         if (!string.IsNullOrEmpty(objPayment.fields.validationCode))
                             json = json.Replace(objPayment.fields.validationCode, Utils.HideCreditCardValidationCode(objPayment.fields.validationCode));
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
+                        this.LogServiceCall("SendPayment request",
+                            string.Format("[{0}] req {1} -- Request: {2}", restSharpRequest.Method, fullUrl, json),
+                            null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
@@ -805,8 +836,9 @@ namespace Enginesoft.VtexIntegrationSample
                         
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("SendPayment response",
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json),
+                            stopwatch.ElapsedMilliseconds);
 
                         serviceCode = ((int)restSharpResponse.StatusCode).ToString();
 
@@ -848,7 +880,7 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("SendPayment exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
@@ -894,8 +926,9 @@ namespace Enginesoft.VtexIntegrationSample
                     {
                         json = Utils.JsonSerialize(requestObj);
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] req {1}\r\nHeaders: {2}\r\nRequest: {3}\r\n", restSharpRequest.Method, fullUrl, GetRequestHeaders(restSharpRequest), json));
+                        this.LogServiceCall("CompleteOrder request",
+                            string.Format("[{0}] req {1} -- Request: {2}", restSharpRequest.Method, fullUrl, json),
+                            null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
@@ -905,8 +938,9 @@ namespace Enginesoft.VtexIntegrationSample
                         if (!string.IsNullOrEmpty(json) && json.IndexOf("<html", StringComparison.CurrentCultureIgnoreCase) != -1)
                             json = Utils.MaxLength(json, 1000, "...");
 
-                        this.LogServiceCall(
-                            string.Format("[{0}] ret {1}\r\nHttpStatusCode: {2}\r\nHeaders: {3}\r\nResponse: {4}\r\n{5}ms\r\n", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, GetResponseHeaders(restSharpResponse), json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("CompleteOrder response",
+                            string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json),
+                            stopwatch.ElapsedMilliseconds);
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -931,7 +965,7 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("CompleteOrder exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
@@ -960,14 +994,14 @@ namespace Enginesoft.VtexIntegrationSample
                 {
                     try
                     {
-                        this.LogServiceCall(string.Format("[{0}] req {1}", restSharpRequest.Method, fullUrl));
+                        this.LogServiceCall("ListPaymentConditions request", string.Format("[{0}] req {1}", restSharpRequest.Method, fullUrl), null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
-                        this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("ListPaymentConditions response", string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json), stopwatch.ElapsedMilliseconds);
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -986,7 +1020,7 @@ namespace Enginesoft.VtexIntegrationSample
 
                 var list = Utils.JsonDeserialize<List<ModelsVtex.PaymentConditionResponse>>(json);
 
-                var listRet = list.Select(a => new Models.PaymentCondition(a.id.ToString(), a.name, a.groupName, Utils.GetPaymentConditionTypeID(a.implementation), 0, null)).ToList();
+                var listRet = list.Select(a => new Models.PaymentCondition(a.id.ToString(), a.groupName, a.name, Utils.GetPaymentConditionTypeID(a.implementation), 0, null)).ToList();
 
                 var response = new Models.ListPaymentConditionsResponse(listRet);
                 return response;
@@ -994,7 +1028,7 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("ListPaymentConditions exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
@@ -1034,14 +1068,14 @@ namespace Enginesoft.VtexIntegrationSample
                 {
                     try
                     {
-                        this.LogServiceCall(string.Format("[{0}] req {1}", restSharpRequest.Method, fullUrl));
+                        this.LogServiceCall("GetPaymentStatus request", string.Format("[{0}] req {1}", restSharpRequest.Method, fullUrl), null);
 
                         stopwatch = Stopwatch.StartNew();
                         restSharpResponse = restSharpClient.Execute(restSharpRequest);
                         stopwatch.Stop();
 
                         json = Utils.RemoveNonVisibleCharacters(restSharpResponse.Content);
-                        this.LogServiceCall(string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3} -- {4}ms", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                        this.LogServiceCall("GetPaymentStatus response", string.Format("[{0}] ret {1} -- HttpStatusCode: {2} -- Response: {3}", restSharpRequest.Method, fullUrl, (int)restSharpResponse.StatusCode, json), stopwatch.ElapsedMilliseconds);
 
                         if (restSharpResponse.StatusCode != System.Net.HttpStatusCode.OK)
                             throw new System.InvalidOperationException(string.Format("Retornado código HTTP: {0} {1}", (int)restSharpResponse.StatusCode, restSharpResponse.ErrorMessage));
@@ -1091,29 +1125,11 @@ namespace Enginesoft.VtexIntegrationSample
             catch (System.Exception ex)
             {
                 System.Diagnostics.Debugger.Break();
-                this.LogServiceCall(string.Format("{0} EXCEPTION: {1} -- {2}ms", fullUrl, ex.Message, stopwatch.ElapsedMilliseconds.ToString("#,##0")));
+                this.LogServiceCall("GetPaymentStatus exception", string.Format("{0} EXCEPTION: {1}", fullUrl, ex.Message), stopwatch.ElapsedMilliseconds);
                 throw new System.InvalidOperationException(string.Format("Erro na integração -- método: {0} -- erro: {1}", fullUrl, ex.Message), ex);
             }
         }
-        
-        private static string GetRequestHeaders(RestSharp.IRestRequest request)
-        {
-            if (request == null)
-                return null;
-
-            string text = string.Join(", ", request.Parameters.Where(a => a.Type == RestSharp.ParameterType.HttpHeader).Select(a => string.Format("{0}={1}", a.Name, a.Value)));
-            return text;
-        }
-        
-        private static string GetResponseHeaders(RestSharp.IRestResponse response)
-        {
-            if (response == null)
-                return null;
-
-            string text = string.Join(", ", response.Headers.Select(a => string.Format("{0}={1}", a.Name, a.Value)));
-            return text;
-        }
-        
+                
         #region LogEvent
 
         public delegate void LogEventHandler(string message);
@@ -1131,17 +1147,20 @@ namespace Enginesoft.VtexIntegrationSample
 
         #region LogServiceCall
 
-        public delegate void LogServiceCallEventHandler(string message);
+        public delegate void LogServiceCallEventHandler(string operation, string message, long? elapsedMiliseconds);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly")]
         public event LogServiceCallEventHandler LogServiceCallEvent;
 
-        protected void LogServiceCall(string message)
+        protected void LogServiceCall(string operation, string message, long? elapsedMiliseconds)
         {
-            System.Diagnostics.Debug.WriteLine(message);
+            if (elapsedMiliseconds.HasValue)
+                System.Diagnostics.Debug.WriteLine(string.Format("{0} -- {1} -- {2}ms",  operation, message, elapsedMiliseconds.Value.ToString("#,##0")));
+            else
+                System.Diagnostics.Debug.WriteLine(string.Format("{0} -- {1}", operation, message));
 
             if (this.LogServiceCallEvent != null)
-                this.LogServiceCallEvent(message);
+                this.LogServiceCallEvent(operation, message, elapsedMiliseconds);
         }
 
         #endregion

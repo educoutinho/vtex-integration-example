@@ -20,6 +20,8 @@ namespace Enginesoft.VtexIntegrationSample.Models
 
         public decimal InstallmentValue { get; private set; }
 
+        public decimal InstallmentRate { get; private set; }
+
 
         public string DocumentNumber { get; private set; }
                 
@@ -34,12 +36,13 @@ namespace Enginesoft.VtexIntegrationSample.Models
         public string ValidationCode { get; private set; }
         
         
-        public PaymentConditionInformation(PaymentCondition paymentCondition, decimal value, int installmentsQuantity, decimal installmentsValue)
+        public PaymentConditionInformation(PaymentCondition paymentCondition, decimal value, int installmentsQuantity, decimal installmentsValue, decimal installmentRate)
         {
             this.PaymentCondition = paymentCondition;
             this.Value = value;
             this.InstallmentQuantity = installmentsQuantity;
             this.InstallmentValue = installmentsValue;
+            this.InstallmentRate = installmentRate;
         }
         
         public void SetValue(decimal value)
@@ -47,10 +50,11 @@ namespace Enginesoft.VtexIntegrationSample.Models
             this.Value = value;
         }
 
-        public void SetInstallmentValue(int installmentQuantity, decimal installmentValue)
+        public void SetInstallmentValue(int installmentQuantity, decimal installmentValue, decimal installmentRate)
         {
             this.InstallmentQuantity = installmentQuantity;
             this.InstallmentValue = installmentValue;
+            this.InstallmentRate = installmentRate;
         }
 
         public void SetCreditCardInformation(string cardNumber, string holderNumer, int dueYear, int dueMonth, string validationCode, string documentNumber)

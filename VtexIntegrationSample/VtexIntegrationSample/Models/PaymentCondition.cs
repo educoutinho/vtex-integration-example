@@ -13,21 +13,21 @@ namespace Enginesoft.VtexIntegrationSample.Models
     {
         public string PaymentConditionCode { get; private set; }
 
+        public string PaymentConditionGroupCode { get; private set; }
+
         public string Name { get; private set; }
-
-        public string GroupName { get; private set; }
-
-        public Models.PaymentTypesEnum PaymentConditionTypeID { get; private set; }
         
+        public Models.PaymentTypesEnum PaymentConditionTypeID { get; private set; }
+                
         public Decimal Value { get; private set; }
         
         public List<PaymentInstallment> PaymentInstallmentsList { get; private set; }
 
-        public PaymentCondition(string paymentConditionCode, string name, string groupName, Models.PaymentTypesEnum paymentConditionTypeID, decimal value, List<PaymentInstallment> paymentInstallmentsList)
+        public PaymentCondition(string paymentConditionCode, string paymentConditionGroupCode, string name, Models.PaymentTypesEnum paymentConditionTypeID, decimal value, List<PaymentInstallment> paymentInstallmentsList)
         {
             this.PaymentConditionCode = paymentConditionCode;
+            this.PaymentConditionGroupCode = paymentConditionGroupCode;
             this.Name = name;
-            this.GroupName = groupName;
             this.PaymentConditionTypeID = paymentConditionTypeID;
             this.Value = value;
             this.PaymentInstallmentsList = paymentInstallmentsList;

@@ -16,7 +16,7 @@ namespace Enginesoft.VtexIntegrationSample.ModelsVtex
         public object postalCode { get; set; }
         public object country { get; set; }
         public List<LogisticsInfo> logisticsInfo { get; set; }
-        public List<object> messages { get; set; }
+        public List<Message> messages { get; set; }
 
         internal class Item
         {
@@ -131,6 +131,14 @@ namespace Enginesoft.VtexIntegrationSample.ModelsVtex
             public int quantity { get; set; }
             public List<string> shipsTo { get; set; }
             public List<Sla> slas { get; set; }
+        }
+
+        internal class Message
+        {
+            public string code { get; set; }
+            public string text { get; set; }
+            public string status { get; set; }
+            public object fields { get; set; }
         }
     }
 }

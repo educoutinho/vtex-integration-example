@@ -12,15 +12,15 @@ namespace Enginesoft.VtexIntegrationSample.Models
 
         public string SupplierOrderNumber { get; private set; }
         
-        public string SupplierTransactionCode { get; private set; }
+        public string PaymentTransactionCode { get; private set; }
 
         public PaymentConditionInformation PaymentConditionInformation { get; private set; }
 
-        public SendPaymentRequest(Models.ClientIntegration clientIntegration, string supplierOrderNumber, string supplierTransactionCode, PaymentConditionInformation paymentConditionInformation)
+        public SendPaymentRequest(Models.ClientIntegration clientIntegration, string supplierOrderNumber, string paymentTransactionCode, PaymentConditionInformation paymentConditionInformation)
         {
             this.ClientIntegration = clientIntegration;
             this.SupplierOrderNumber = supplierOrderNumber;
-            this.SupplierTransactionCode = supplierTransactionCode;
+            this.PaymentTransactionCode = paymentTransactionCode;
             this.PaymentConditionInformation = paymentConditionInformation;
         }
     }
