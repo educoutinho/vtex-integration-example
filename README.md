@@ -1,2 +1,2 @@
-# VtexIntegrationSample
-Teste de integração com a VTEX
+# VtexIntegrationExample
+Exemplo de integração com a plataforma VTEX
