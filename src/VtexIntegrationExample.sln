@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31515.178
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VtexIntegrationSample", "VtexIntegrationSample\VtexIntegrationSample.csproj", "{6C18D590-2AD7-4D27-8DD9-3FC161C266F6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VtexIntegrationExample", "VtexIntegrationExample\VtexIntegrationExample.csproj", "{6C18D590-2AD7-4D27-8DD9-3FC161C266F6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4D3117FA-B541-40C9-A230-E295AB7CA62A}
 	EndGlobalSection
 EndGlobal
